@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,5 +34,9 @@ public class UserService {
         } catch (Exception e) {
             return false;
         }
+    }
+    public Optional<User> findByUsername(String username)
+    {
+        return userRepository.findByUsername(username);
     }
 }
