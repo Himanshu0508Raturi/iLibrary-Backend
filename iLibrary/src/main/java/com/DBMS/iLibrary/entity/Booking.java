@@ -34,7 +34,6 @@ public class Booking {
         PENDING,     // Booking has been requested but not yet confirmed
         CONFIRMED,   // Booking is approved and valid
         CANCELLED,   // Booking was canceled by user or admin
-        SYNCED,      // Offline booking has been successfully synced to the database
         FAILED       // Booking failed (e.g., payment failed, seat unavailable)
     }
 
