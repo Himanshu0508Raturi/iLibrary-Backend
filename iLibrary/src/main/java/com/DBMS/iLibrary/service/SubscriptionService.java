@@ -45,5 +45,8 @@ public class SubscriptionService {
         subsRepo.save(subs);
         return true;
     }
+    public Optional<Subscription> getActiveSubscription(User user) {
+        return subsRepo.findByUserAndStatus(user, Subscription.SubscriptionStatus.ACTIVE);
+    }
 
 }

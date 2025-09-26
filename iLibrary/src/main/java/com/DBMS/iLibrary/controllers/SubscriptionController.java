@@ -12,12 +12,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/subscription")
-public class SubscriptionControllers {
+public class SubscriptionController {
     @Autowired
     private SubscriptionService subsService;
 
@@ -53,9 +52,7 @@ public class SubscriptionControllers {
         if (subs.isEmpty()) {
             return ResponseEntity.ok("No active subscription found");
         }
-
         Subscription subscription = subs.get();
-
         // check if subscription is still valid
         if (subscription.getEndDate().isBefore(LocalDateTime.now())) {
             return ResponseEntity.ok("Subscription expired on: " + subscription.getEndDate());
@@ -63,6 +60,62 @@ public class SubscriptionControllers {
 
         return ResponseEntity.ok("Active subscription: " + subscription.getType()
                 + " (valid until " + subscription.getEndDate() + ")");
+    }
+    @PutMapping("/renew")
+    public ResponseEntity<?> renewASubs()
+    {
+        Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+        if(opUser.isEmpty())
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+        User user = opUser.get();
+        // 2. Find user's active subscription
+        Optional<Subscription> opSubs = subsService.getActiveSubscription(user);
+        if (opSubs.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active subscription found for this user");
+        }
 
+        Subscription subs = opSubs.get();
+
+        // 3. Extend subscription based on type
+        switch (subs.getType()) {
+            case WEEKLY:
+                subs.setEndDate(subs.getEndDate().plusDays(7));
+                break;
+            case MONTHLY:
+                subs.setEndDate(subs.getEndDate().plusMonths(1));
+                break;
+            case YEARLY:
+                subs.setEndDate(subs.getEndDate().plusYears(1));
+                break;
+        }
+
+        subs.setStatus(Subscription.SubscriptionStatus.ACTIVE); // ensure it remains active
+
+        // 4. Save updated subscription
+        subsRepo.save(subs);
+
+        // 5. Return success response
+        return ResponseEntity.ok("Subscription renewed successfully. New end date: " + subs.getEndDate());
+    }
+    @PutMapping("/cancel")
+    public ResponseEntity<?> cancelASubs()
+    {
+        Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+        if(opUser.isEmpty())
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+        User user = opUser.get();
+        // 2. Find user's active subscription
+        Optional<Subscription> opSubs = subsService.getActiveSubscription(user);
+        if (opSubs.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active subscription found for this user");
+        }
+        Subscription subs = opSubs.get();
+        subs.setStatus(Subscription.SubscriptionStatus.valueOf("PASSIVE"));
+        subsRepo.save(subs);
+        return ResponseEntity.ok("Subscription Cancelled successfully.");
     }
 }
