@@ -2,11 +2,13 @@ package com.DBMS.iLibrary.service;
 
 import com.DBMS.iLibrary.entity.Booking;
 import com.DBMS.iLibrary.entity.QrTokendto;
+import com.DBMS.iLibrary.entity.User;
 import com.DBMS.iLibrary.repository.BookingRepo;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,10 @@ public class LibrarianService {
     private String secretKey;
     @Autowired
     private BookingRepo bookingRepo;
+    @Autowired
+    private MailService mailService;
+    @Autowired
+    private UserService userService;
 
 
     public String verifyQrToken(String qrToken) {
@@ -56,8 +62,15 @@ public class LibrarianService {
         long hours = duration.toHours();
         long minutes = duration.toMinutesPart(); // Java 9+
         booking.setEndTime(LocalDateTime.now().plusHours(hours));
+        User user = booking.getUser();
         bookingRepo.save(booking);
-
+        try
+        {
+            mailService.sendConformationMail(user , booking);
+        } catch (MessagingException e) {
+            System.out.print("Error at librarian service conform message function.");
+            throw new RuntimeException(e);
+        }
         return "Booking verified successfully for seat number: " + seatNumber +
                 ", Duration: " + hours + " hours " + minutes + " minutes";
     }

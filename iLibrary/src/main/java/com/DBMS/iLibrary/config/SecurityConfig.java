@@ -27,8 +27,9 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**","/librarian/**").permitAll()
-                        //.requestMatchers("/librarian/**").hasRole("LIBRARIAN")
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/librarian/**").hasAnyAuthority("ROLE_LIBRARIAN","ROLE_ADMIN")
+                        .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(

@@ -24,7 +24,7 @@ public class QrcodeService {
         BitMatrix matrix = new MultiFormatWriter().encode(data, BarcodeFormat.QR_CODE, 500, 500);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         MatrixToImageWriter.writeToStream(matrix, "jpg", baos);
-        mailService.sendMail(baos,to,booking);
+        mailService.sendBookingMail(baos,to,booking);
 
     }
 }
