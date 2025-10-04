@@ -1,8 +1,10 @@
 package com.DBMS.iLibrary.controllers;
 
 import com.DBMS.iLibrary.entity.User;
+import com.DBMS.iLibrary.service.MailService;
 import com.DBMS.iLibrary.service.UserService;
 import com.DBMS.iLibrary.utilities.JwtUtil;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,9 @@ public class PublicController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private MailService mailService;
+
     @GetMapping("/healthCheck")
     public ResponseEntity<?> getHealth()
     {
@@ -34,20 +39,21 @@ public class PublicController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> createUser(@RequestBody User user) {
-        boolean res = false;
         Set<String> roles = user.getRoles();
 
-        // Optional: Add ROLE_ prefix if missing (assuming your roles are like STUDENT, ADMIN, etc.)
+        // Add ROLE_ prefix if missing (Spring Security convention)
         Set<String> prefixedRoles = roles.stream()
                 .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
                 .collect(Collectors.toSet());
-
-        res = userService.saveUser(user, prefixedRoles);
-
-        if (res) {
+        try {
+            userService.saveUser(user, prefixedRoles); // Save user first.
+            mailService.sendSignupMail(user.getEmail(), user.getUsername()); // Then send welcome mail
             return new ResponseEntity<>("User Registered.", HttpStatus.CREATED);
+        } catch (MessagingException e) {
+            return new ResponseEntity<>("Signup succeeded, but failed to send email.", HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>("Error while saving user.", HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>("Error While Saving User.", HttpStatus.BAD_REQUEST);
     }
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user)

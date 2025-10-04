@@ -31,7 +31,7 @@ public class Subscription {
     }
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus status;
-
+    private int price;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 }

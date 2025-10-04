@@ -3,8 +3,10 @@ package com.DBMS.iLibrary.controllers;
 import com.DBMS.iLibrary.entity.Subscription;
 import com.DBMS.iLibrary.entity.User;
 import com.DBMS.iLibrary.repository.SubscriptionRepo;
+import com.DBMS.iLibrary.service.MailService;
 import com.DBMS.iLibrary.service.SubscriptionService;
 import com.DBMS.iLibrary.service.UserService;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,16 +26,24 @@ public class SubscriptionController {
     private SubscriptionRepo subsRepo;
     @Autowired
     private UserService userService;
+    @Autowired
+    private MailService mailService;
 
     @PostMapping("/buy")
     public ResponseEntity<?> buyASubscription(@RequestBody Subscription subs) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 //        Long id = subsService.findById(username);
         Optional<User> user = userService.findByUsername(username);
-        if (user.isPresent())
-            subs.setUser(user.get());
+        user.ifPresent(subs::setUser);
+//        if (user.isPresent())
+//            subs.setUser(user.get());
         boolean res = subsService.saveNewSubs(subs);
         if (res) {
+            try{
+                mailService.sendSubscriptionMail(user.get(),subs);
+            } catch (MessagingException e) {
+                return new ResponseEntity<>("!! Error with mail service", HttpStatus.BAD_REQUEST);
+            }
             return new ResponseEntity<>("Subscribed Successfully", HttpStatus.ACCEPTED);
         }
         return new ResponseEntity<>("!! Error while Subscribing a pass", HttpStatus.BAD_REQUEST);

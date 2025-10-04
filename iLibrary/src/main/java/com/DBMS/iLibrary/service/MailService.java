@@ -1,6 +1,7 @@
 package com.DBMS.iLibrary.service;
 
 import com.DBMS.iLibrary.entity.Booking;
+import com.DBMS.iLibrary.entity.Subscription;
 import com.DBMS.iLibrary.entity.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -11,6 +12,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.security.SecureRandom;
 import java.time.Duration;
 
 @Service
@@ -119,6 +121,52 @@ public class MailService {
             e.printStackTrace();
             throw e;  // or handle accordingly
         }
+    }
+    public void sendSignupMail(String to, String userName) throws MessagingException {
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        String otp = generateRandom();
+        helper.setTo(to);
+        helper.setSubject("Welcome to the Library System!");
+        helper.setText(
+                "Dear " + userName + ",\n\n" +
+                        "Congratulations! Your account has been successfully created in the Library Management System.\n" +
+                        "You can now log in and reserve seats, manage your bookings, and make full use of our library resources.\n\n" +
+                        "If you did not register for this account, please contact library staff immediately.\n\n" +
+                        "Best regards,\niLibrary Management Team"
+                , false);
+
+        mailSender.send(message);
+    }
+    public void sendSubscriptionMail(User user , Subscription subs) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(user.getEmail());
+        helper.setSubject(String.valueOf(subs.getType()) + " Library Subscription Confirmed");
+
+        String body =
+                "Dear " + user.getUsername() + ",\n\n" +
+                        "Thank you for purchasing a " + String.valueOf(subs.getType()).toLowerCase() + " subscription for the Library.\n\n" +
+                        "Subscription Details:\n" +
+                        "  - Subscription Type: " + String.valueOf(subs.getType()) + "\n" +
+                        "  - Valid From: " + subs.getStartDate() + "\n" +
+                        "  - Valid Until: " + subs.getEndDate() + "\n" +
+                        "  - Total Price: ₹" + subs.getPrice() + "\n\n" +
+                        "You now have full access to all member benefits during the active period of your subscription.\n" +
+                        "If you have any questions, please reply to this email or contact the library.\n\n" +
+                        "Thank you for choosing our library services!\n\n" +
+                        "Best regards,\niLibrary Management Team";
+
+        helper.setText(body, false);
+        mailSender.send(message);
+    }
+    public String generateRandom()
+    {
+        SecureRandom random = new SecureRandom();
+        int otp = random.nextInt(1_000_000);
+        return String.format("%06d",otp);
     }
 
 }

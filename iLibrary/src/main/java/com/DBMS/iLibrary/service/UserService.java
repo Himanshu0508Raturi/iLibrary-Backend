@@ -8,11 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -22,7 +20,7 @@ public class UserService {
     private static final PasswordEncoder passwordencoder = new BCryptPasswordEncoder();
 
     @Transactional
-    public boolean saveUser(User user , Set<String> role)
+    public RuntimeException saveUser(User user , Set<String> role)
     {
         try
         {
@@ -30,10 +28,10 @@ public class UserService {
             user.setCreatedAt(new Date());
             user.setRoles(role);
             userRepository.save(user);
-            return true;
         } catch (Exception e) {
-            return false;
+            return new RuntimeException("Error while saving user");
         }
+        return null;
     }
     public Optional<User> findByUsername(String username)
     {
