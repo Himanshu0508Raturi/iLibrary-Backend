@@ -19,6 +19,11 @@ public class LibrarianController {
     @Autowired
     private LibrarianService librarianService;
 
+    // Verify qr received by the user through mail.
+    // How this method verify : read jwt token from user's QR , convert token to info(bookingId,seatNumber,status,endTimeStr)
+    // using jws Claims and secret key, set booking status to CONFORMED in booking table , change start and end time of booking
+    // in booking table accordingly and then save to booking table.
+    // uses Mail service
     @PostMapping("/verify-qr")
     public ResponseEntity<?> verifyQrCode(@RequestBody QrTokendto token) {
         try {

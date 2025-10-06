@@ -29,6 +29,10 @@ public class SubscriptionController {
     @Autowired
     private MailService mailService;
 
+    // Buy's a subscription for a logged in user.Save logged in user's entity to subscription entity field and then save to
+    // subscription table in DB.
+    // RequestBody -> Subscription entity
+    // Mail service involved.
     @PostMapping("/buy")
     public ResponseEntity<?> buyASubscription(@RequestBody Subscription subs) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -39,16 +43,17 @@ public class SubscriptionController {
 //            subs.setUser(user.get());
         boolean res = subsService.saveNewSubs(subs);
         if (res) {
-            try{
-                mailService.sendSubscriptionMail(user.get(),subs);
+            try {
+                mailService.sendSubscriptionMail(user.get(), subs);
             } catch (MessagingException e) {
-                return new ResponseEntity<>("!! Error with mail service", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("!! Error while sending buy mail to User: " + user.get().getUsername() + ".", HttpStatus.BAD_REQUEST);
             }
             return new ResponseEntity<>("Subscribed Successfully", HttpStatus.ACCEPTED);
         }
         return new ResponseEntity<>("!! Error while Subscribing a pass", HttpStatus.BAD_REQUEST);
     }
 
+    // get subscription entity belongs to a particular logged in user from subscription table.
     @GetMapping("/status")
     public ResponseEntity<?> getStatus() //get user subscription status
     {
@@ -71,19 +76,20 @@ public class SubscriptionController {
         return ResponseEntity.ok("Active subscription: " + subscription.getType()
                 + " (valid until " + subscription.getEndDate() + ")");
     }
+
+    // renew subscription of a user if he/she wants , change end date of subscription only.
+    // Mail service involved
     @PutMapping("/renew")
-    public ResponseEntity<?> renewASubs()
-    {
+    public ResponseEntity<?> renewASubs() {
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
-        if(opUser.isEmpty())
-        {
+        if (opUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
         User user = opUser.get();
         // 2. Find user's active subscription
         Optional<Subscription> opSubs = subsService.getActiveSubscription(user);
         if (opSubs.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active subscription found for this user");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active subscription found for the user: " + user.getUsername() + ".");
         }
 
         Subscription subs = opSubs.get();
@@ -105,16 +111,22 @@ public class SubscriptionController {
 
         // 4. Save updated subscription
         subsRepo.save(subs);
-
+        try {
+            mailService.renewSubscriptionMail(user, subs);
+        } catch (MessagingException e) {
+            return new ResponseEntity<>("Error while Sending renew subscription mail to user: " + user.getUsername() + ".", HttpStatus.BAD_REQUEST);
+        }
         // 5. Return success response
         return ResponseEntity.ok("Subscription renewed successfully. New end date: " + subs.getEndDate());
     }
+
+    // Cancel a subscription for a user if he/she wants. don't delete from subscription table just change status from ACTIVE to
+    // PASSIVE and save back to subscription table.
+    // Mail service involved.
     @PutMapping("/cancel")
-    public ResponseEntity<?> cancelASubs()
-    {
+    public ResponseEntity<?> cancelASubs() {
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
-        if(opUser.isEmpty())
-        {
+        if (opUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
         User user = opUser.get();
@@ -126,6 +138,11 @@ public class SubscriptionController {
         Subscription subs = opSubs.get();
         subs.setStatus(Subscription.SubscriptionStatus.valueOf("PASSIVE"));
         subsRepo.save(subs);
+        try {
+            mailService.cancelSubscriptionMail(user, subs);
+        } catch (MessagingException e) {
+            return new ResponseEntity<>("Error while Sending Cancellation Mail to user " + user.getUsername() + ".", HttpStatus.BAD_REQUEST);
+        }
         return ResponseEntity.ok("Subscription Cancelled successfully.");
     }
 }

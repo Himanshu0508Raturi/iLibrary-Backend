@@ -31,11 +31,14 @@ public class SubscriptionService {
         String type = String.valueOf(subs.getType());
         if(type.equals("WEEKLY"))
         {
+            subs.setPrice(600);
             subs.setEndDate(LocalDateTime.now().plusDays(7));
         }else if(type.equals("MONTHLY"))
         {
+            subs.setPrice(3500);
             subs.setEndDate(LocalDateTime.now().plusMonths(1));
         } else if (type.equals("YEARLY")) {
+            subs.setPrice(12000);
             subs.setEndDate(LocalDateTime.now().plusYears(1));
         }else
         {

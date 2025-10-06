@@ -31,12 +31,14 @@ public class PublicController {
     @Autowired
     private MailService mailService;
 
+    // Health check function to check api is successfully deployed in server.
     @GetMapping("/healthCheck")
-    public ResponseEntity<?> getHealth()
-    {
-        return new ResponseEntity<>("Health : OK" , HttpStatus.OK);
+    public ResponseEntity<?> getHealth() {
+        return new ResponseEntity<>("Health : OK", HttpStatus.OK);
     }
-
+    // Saves user detail in user table first time. add prefix role in user's role
+    // Mail service involves.
+    // Request Body -> User entity
     @PostMapping("/signup")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         Set<String> roles = user.getRoles();
@@ -47,20 +49,19 @@ public class PublicController {
                 .collect(Collectors.toSet());
         try {
             userService.saveUser(user, prefixedRoles); // Save user first.
-            mailService.sendSignupMail(user.getEmail(), user.getUsername()); // Then send welcome mail
-            return new ResponseEntity<>("User Registered.", HttpStatus.CREATED);
+            mailService.sendSignupMail(user); // Then send otp mail
+            return new ResponseEntity<>("User Registered Successfully", HttpStatus.CREATED);
         } catch (MessagingException e) {
             return new ResponseEntity<>("Signup succeeded, but failed to send email.", HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>("Error while saving user.", HttpStatus.BAD_REQUEST);
         }
     }
+    // add user to Spring Security Context Holder simply means loggin in user and send a token as a response
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user)
-    {
-        try
-        {
-            Authentication authentication = authenticationManager.authenticate( new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+    public ResponseEntity<?> login(@RequestBody User user) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
             String token = jwtUtil.generateToken(user.getUsername());
             return ResponseEntity.ok().body(token);
         } catch (Exception e) {

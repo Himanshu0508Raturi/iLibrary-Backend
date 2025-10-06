@@ -29,7 +29,9 @@ public class BookingController {
     private MailService mailService;
     @Autowired
     private BookingRepo bookingRepo;
-
+    // Books a seat for a logged in user in booking table : Request Body : seatdto.
+    // Transactional bookseat() method().
+    // Mail service Involved.
     @PostMapping("/seat")
     public ResponseEntity<?> bookASeat(@RequestBody SeatDTO seatdto) {
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
@@ -46,7 +48,10 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Runtime Exception occurred in booking controller");
         }
     }
-
+    // cancel a seat for a loggin in user in booking table .Table data wouldn't be deleted only status set to CANCEL in booking
+    // table for history purpose , also seat status is set to AVAILABLE in seat table.
+    // mail service involved
+    //Transactional cancelBooking() method
     @DeleteMapping("/cancel/{bookingId}")
     public ResponseEntity<?> cancelABooking(@PathVariable Long bookingId) {
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());

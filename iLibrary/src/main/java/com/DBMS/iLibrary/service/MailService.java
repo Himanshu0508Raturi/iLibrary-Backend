@@ -13,7 +13,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.security.SecureRandom;
+import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 @Service
 public class MailService {
@@ -26,6 +31,10 @@ public class MailService {
         long hours = duration.toHours();
         long minutes = duration.toMinutes() % 60;
         String time = "Time: " + hours + " hours " + minutes + " minutes";
+        //Date Formatter.
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
+        String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
+
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(to);
@@ -36,11 +45,11 @@ public class MailService {
                         "Please find your unique QR code attached to this email. You will need to show this QR code at the library entrance for verification.\n\n" +
                         "Booking Details:\n" +
                         "- Seat: " + booking.getSeat().getSeatNumber() + "\n" +
-                        "- Date: " + booking.getBookingDate() + "\n" +
+                        "- Date: " + bookingDate + "\n" +
                         "- Status: " + booking.getStatus() + "\n" +
                         "- Time: " + time + "\n" +
                         "Note:\n" +
-                        "- Please keep your QR code ready for entrance verification.\n"+
+                        "- Please keep your QR code ready for entrance verification.\n" +
                         "- Do not share this QR code with others.\n" +
                         "- The QR code is valid only for the above booking.\n\n" +
                         "Thank you,\n" +
@@ -57,7 +66,14 @@ public class MailService {
 
 
     }
+
     public void sendConformationMail(User user, Booking booking) throws MessagingException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
+        String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
+        //Time Formatter
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+        String startTime = booking.getStartTime().format(timeFormatter);
+        String endTime = booking.getEndTime().format(timeFormatter);
         String text = "Dear " + user.getUsername() + "," + "\n " +
                 "\n" +
                 "Congratulations! Your library seat booking has been CONFIRMED by the librarian.\n" +
@@ -65,9 +81,9 @@ public class MailService {
                 "Here are your booking details:\n" +
                 "\n" +
                 "- Seat Number: " + booking.getSeat().getSeatNumber() + "\n" +
-                "- Booking Date: " + booking.getBookingDate() + "\n" +
-                "- Start Time: " + booking.getStartTime() + "\n" +
-                "- End Time: " + booking.getEndTime() + "\n" +
+                "- Booking Date: " + bookingDate + "\n" +
+                "- Start Time: " + startTime + "\n" +
+                "- End Time: " + endTime + "\n" +
                 "- Booking Status: " + booking.getStatus() + "\n" +
                 "\n" +
                 "If you have any questions or need further assistance, feel free to reply to this email or contact the library staff.\n" +
@@ -81,7 +97,7 @@ public class MailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(user.getEmail());
         helper.setSubject("Library Seat Booking Confirmation");
-        helper.setText(text,false);
+        helper.setText(text, false);
         try {
             mailSender.send(message);
         } catch (Exception e) {
@@ -89,7 +105,15 @@ public class MailService {
             throw e;  // or handle accordingly
         }
     }
+
     public void sendCancellationMail(User user, Booking booking) throws MessagingException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
+        String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
+        //Time Formatter
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+        String startTime = booking.getStartTime().format(timeFormatter);
+        String endTime = booking.getEndTime().format(timeFormatter);
+
         String text = "Dear " + user.getUsername() + "," + "\n " +
                 "\n" +
                 "This is to confirm that your library seat booking has been successfully cancelled as per your request.\n" +
@@ -97,9 +121,9 @@ public class MailService {
                 "Here are your booking details:\n" +
                 "\n" +
                 "- Seat Number: " + booking.getSeat().getSeatNumber() + "\n" +
-                "- Booking Date: " + booking.getBookingDate() + "\n" +
-                "- Start Time: " + booking.getStartTime() + "\n" +
-                "- End Time: " + booking.getEndTime() + "\n" +
+                "- Booking Date: " + bookingDate + "\n" +
+                "- Start Time: " + startTime + "\n" +
+                "- End Time: " + endTime + "\n" +
                 "- Booking Status: " + booking.getStatus() + "\n" +
                 "\n" +
                 "If any refund applies, the amount will be processed within 2 business days.\n" +
@@ -114,7 +138,7 @@ public class MailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(user.getEmail());
         helper.setSubject("Library Seat Booking Cancelled");
-        helper.setText(text,false);
+        helper.setText(text, false);
         try {
             mailSender.send(message);
         } catch (Exception e) {
@@ -122,15 +146,15 @@ public class MailService {
             throw e;  // or handle accordingly
         }
     }
-    public void sendSignupMail(String to, String userName) throws MessagingException {
+
+    public void sendSignupMail(User user) throws MessagingException {
 
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        String otp = generateRandom();
-        helper.setTo(to);
-        helper.setSubject("Welcome to the Library System!");
+        helper.setTo(user.getEmail());
+        helper.setSubject("iLibrary System Signup");
         helper.setText(
-                "Dear " + userName + ",\n\n" +
+                "Dear " + user.getUsername() + ",\n\n" +
                         "Congratulations! Your account has been successfully created in the Library Management System.\n" +
                         "You can now log in and reserve seats, manage your bookings, and make full use of our library resources.\n\n" +
                         "If you did not register for this account, please contact library staff immediately.\n\n" +
@@ -139,9 +163,15 @@ public class MailService {
 
         mailSender.send(message);
     }
-    public void sendSubscriptionMail(User user , Subscription subs) throws MessagingException {
+
+    public void sendSubscriptionMail(User user, Subscription subs) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
+        String endDate = subs.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
+        String startDate = subs.getStartDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
+
 
         helper.setTo(user.getEmail());
         helper.setSubject(String.valueOf(subs.getType()) + " Library Subscription Confirmed");
@@ -151,8 +181,8 @@ public class MailService {
                         "Thank you for purchasing a " + String.valueOf(subs.getType()).toLowerCase() + " subscription for the Library.\n\n" +
                         "Subscription Details:\n" +
                         "  - Subscription Type: " + String.valueOf(subs.getType()) + "\n" +
-                        "  - Valid From: " + subs.getStartDate() + "\n" +
-                        "  - Valid Until: " + subs.getEndDate() + "\n" +
+                        "  - Valid From: " + startDate + "\n" +
+                        "  - Valid Until: " + endDate + "\n" +
                         "  - Total Price: ₹" + subs.getPrice() + "\n\n" +
                         "You now have full access to all member benefits during the active period of your subscription.\n" +
                         "If you have any questions, please reply to this email or contact the library.\n\n" +
@@ -162,11 +192,65 @@ public class MailService {
         helper.setText(body, false);
         mailSender.send(message);
     }
-    public String generateRandom()
-    {
-        SecureRandom random = new SecureRandom();
-        int otp = random.nextInt(1_000_000);
-        return String.format("%06d",otp);
+
+    public void renewSubscriptionMail(User user, Subscription subscription) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
+        String endDate = subscription.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
+
+        helper.setTo(user.getEmail());
+        helper.setSubject("Your Subscription Has Been Renewed Successfully!");
+
+        String body =
+                "Dear " + user.getUsername() + ",\n" +
+                        "\n" +
+                        "Thank you for renewing your subscription with iLibrary Management System.\n" +
+                        "\n" +
+                        "We're pleased to inform you that your subscription has been successfully extended. Your new subscription end date is ." + endDate +"\n" +
+                        "\n" +
+                        "You can continue enjoying full access to our library resources, seat reservations, and all other membership benefits without interruption.\n" +
+                        "\n" +
+                        "If you have any questions or need assistance, please feel free to reach out to us at [Support Email/Phone].\n" +
+                        "\n" +
+                        "Thank you for being a valued member of our community. We look forward to supporting your learning and exploration for another subscription period!\n" +
+                        "\n" +
+                        "Best regards,\n" +
+                        "iLibrary Management Team";
+
+        helper.setText(body, false);
+        mailSender.send(message);
+    }
+    public void cancelSubscriptionMail(User user, Subscription subscription) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(user.getEmail());
+        helper.setSubject("Your Subscription Cancellation Confirmation");
+
+        // Format current date/time
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
+        String cancelDate = LocalDateTime.now(ZoneId.systemDefault()).format(formatter);
+
+        // Format subscription end date, assuming subscription.getEndDate() is java.time.LocalDate or compatible
+        String endDate = subscription.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy"));
+
+        String body = String.format(
+                "Dear %s,\n\n" +
+                        "We’re sorry to see you go.\n\n" +
+                        "This email is to confirm that your subscription with iLibrary Management System has been successfully canceled as of %s. " +
+                        "You will continue to have access to our services until %s, after which your access will be discontinued.\n\n" +
+                        "If you have any questions or need assistance, please don’t hesitate to contact us at support@ilibrary.com or call (123) 456-7890.\n\n" +
+                        "We value your feedback. If you have a moment, please let us know the reason for your cancellation—it helps us improve our services.\n\n" +
+                        "Thank you for having been part of our community, and we hope to welcome you back in the future.\n\n" +
+                        "Best regards,\n" +
+                        "iLibrary Management Team\n",
+                user.getUsername(), cancelDate, endDate
+        );
+
+        helper.setText(body, false);
+        mailSender.send(message);
     }
 
 }

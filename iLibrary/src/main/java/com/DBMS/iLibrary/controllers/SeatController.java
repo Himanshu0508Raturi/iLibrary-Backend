@@ -19,7 +19,7 @@ public class SeatController {
     private SeatService seatService;
     @Autowired
     private SeatRepo seatRepo;
-
+    // Send list of all available seats in seat table.
     @GetMapping("/available")
     public ResponseEntity<?> getAvailableSeat()
     {
