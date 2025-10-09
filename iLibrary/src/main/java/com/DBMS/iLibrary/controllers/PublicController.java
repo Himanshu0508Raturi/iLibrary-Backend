@@ -36,9 +36,12 @@ public class PublicController {
     public ResponseEntity<?> getHealth() {
         return new ResponseEntity<>("Health : OK", HttpStatus.OK);
     }
+
     // Saves user detail in user table first time. add prefix role in user's role
     // Mail service involves.
     // Request Body -> User entity
+    //username must start with a letter
+    //subsequent characters can be letters, digits, or underscore
     @PostMapping("/signup")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         Set<String> roles = user.getRoles();
@@ -47,6 +50,15 @@ public class PublicController {
         Set<String> prefixedRoles = roles.stream()
                 .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
                 .collect(Collectors.toSet());
+        boolean isMailValid = userService.isValidEmail(user.getEmail());
+        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
+        if (!isMailValid) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
+        }
+
+        if (!isUserNameValid) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
+        }
         try {
             userService.saveUser(user, prefixedRoles); // Save user first.
             mailService.sendSignupMail(user); // Then send otp mail
@@ -56,10 +68,20 @@ public class PublicController {
         } catch (RuntimeException e) {
             return new ResponseEntity<>("Error while saving user.", HttpStatus.BAD_REQUEST);
         }
+
     }
-    // add user to Spring Security Context Holder simply means loggin in user and send a token as a response
+
+    // add user to Spring Security Context Holder simply means logged in user and send a token as a response
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {
+        boolean isMailValid = userService.isValidEmail(user.getEmail());
+        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
+        if (!isMailValid) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
+        }
+        if (!isUserNameValid) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
+        }
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
             String token = jwtUtil.generateToken(user.getUsername());

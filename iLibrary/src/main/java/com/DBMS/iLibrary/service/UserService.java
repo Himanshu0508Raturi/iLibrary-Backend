@@ -41,4 +41,21 @@ public class UserService {
     {
         userRepository.deleteById(id);
     }
+    public boolean isValidEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return false;
+        }
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(gmail|outlook)\\.com$";
+        return email.matches(emailRegex);
+    }
+    public boolean isValidUsername(String username) {
+        if (username == null) {
+            return false;
+        }
+        // Regex: start with letter, followed by letters, digits or underscore, total length 6-30
+        String usernameRegex = "^[A-Za-z][A-Za-z0-9_]{5,29}$";
+        return username.matches(usernameRegex);
+    }
+
+
 }
