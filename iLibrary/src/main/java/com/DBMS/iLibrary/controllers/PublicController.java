@@ -5,6 +5,7 @@ import com.DBMS.iLibrary.service.MailService;
 import com.DBMS.iLibrary.service.UserService;
 import com.DBMS.iLibrary.utilities.JwtUtil;
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,22 +44,22 @@ public class PublicController {
     //username must start with a letter
     //subsequent characters can be letters, digits, or underscore
     @PostMapping("/signup")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
         Set<String> roles = user.getRoles();
 
         // Add ROLE_ prefix if missing (Spring Security convention)
         Set<String> prefixedRoles = roles.stream()
                 .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
                 .collect(Collectors.toSet());
-        boolean isMailValid = userService.isValidEmail(user.getEmail());
-        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
-        if (!isMailValid) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
-        }
-
-        if (!isUserNameValid) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
-        }
+//        boolean isMailValid = userService.isValidEmail(user.getEmail());
+//        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
+//        if (!isMailValid) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
+//        }
+//
+//        if (!isUserNameValid) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
+//        } replaced by @Valid annotation.
         try {
             userService.saveUser(user, prefixedRoles); // Save user first.
             mailService.sendSignupMail(user); // Then send otp mail
@@ -73,15 +74,15 @@ public class PublicController {
 
     // add user to Spring Security Context Holder simply means logged in user and send a token as a response
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
-        boolean isMailValid = userService.isValidEmail(user.getEmail());
-        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
-        if (!isMailValid) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
-        }
-        if (!isUserNameValid) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
-        }
+    public ResponseEntity<?> login(@Valid @RequestBody User user) {
+//        boolean isMailValid = userService.isValidEmail(user.getEmail());
+//        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
+//        if (!isMailValid) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
+//        }
+//        if (!isUserNameValid) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
+//        }
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
             String token = jwtUtil.generateToken(user.getUsername());

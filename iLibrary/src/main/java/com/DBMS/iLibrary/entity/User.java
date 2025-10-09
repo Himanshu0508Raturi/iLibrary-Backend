@@ -1,6 +1,10 @@
 package com.DBMS.iLibrary.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,12 +22,16 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
+    @NotBlank(message = "Username cannot be blank") // @NotBlank for text input , Use @NotEmpty for collections, arrays, or strings where any non-null, non-empty value is acceptable, including whitespace strings.
+    @Pattern(regexp = "^[A-Za-z][A-Za-z0-9_]{5,29}$", message = "username must start with a letter subsequent characters can be letters, digits, or underscore")
     private String username;
 
     @Column(nullable = false, length = 225)
+    @NotBlank(message = "Password cannot be blank.")
     private String password;
 
     @Column(nullable = false, unique = true, length = 150)
+    @Email(message = "Email must be valid.")
     private String email;
 
     @ElementCollection(fetch = FetchType.EAGER) //Tells JPA: “This field isn’t a separate entity, but a collection of simple values (like Strings, Integers, Embeddables).”

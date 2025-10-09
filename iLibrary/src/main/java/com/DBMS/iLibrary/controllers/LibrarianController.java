@@ -3,6 +3,7 @@ package com.DBMS.iLibrary.controllers;
 import com.DBMS.iLibrary.entity.QrTokendto;
 import com.DBMS.iLibrary.service.LibrarianService;
 import io.jsonwebtoken.JwtException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class LibrarianController {
     // in booking table accordingly and then save to booking table.
     // uses Mail service
     @PostMapping("/verify-qr")
-    public ResponseEntity<?> verifyQrCode(@RequestBody QrTokendto token) {
+    public ResponseEntity<?> verifyQrCode(@Valid @RequestBody QrTokendto token) {
         try {
             String response = librarianService.verifyQrToken(token.getQrToken());
             return ResponseEntity.ok(response);

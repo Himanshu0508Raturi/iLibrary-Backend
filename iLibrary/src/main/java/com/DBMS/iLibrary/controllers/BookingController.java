@@ -6,6 +6,7 @@ import com.DBMS.iLibrary.repository.SeatRepo;
 import com.DBMS.iLibrary.service.BookingService;
 import com.DBMS.iLibrary.service.MailService;
 import com.DBMS.iLibrary.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class BookingController {
     // Transactional bookseat() method().
     // Mail service Involved.
     @PostMapping("/seat")
-    public ResponseEntity<?> bookASeat(@RequestBody SeatDTO seatdto) {
+    public ResponseEntity<?> bookASeat(@Valid @RequestBody SeatDTO seatdto) {
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
         if (opUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
@@ -53,7 +54,7 @@ public class BookingController {
     // mail service involved
     //Transactional cancelBooking() method
     @DeleteMapping("/cancel/{bookingId}")
-    public ResponseEntity<?> cancelABooking(@PathVariable Long bookingId) {
+    public ResponseEntity<?> cancelABooking(@Valid @PathVariable Long bookingId) {
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
         if (opUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
