@@ -1,6 +1,8 @@
 package com.DBMS.iLibrary.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -24,10 +26,11 @@ public class Subscription {
         WEEKLY, MONTHLY, YEARLY
     }
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "Subscription type shouldn't be null")
     private SubscriptionType type;
 
     public enum SubscriptionStatus {
-        ACTIVE, PASSIVE
+        ACTIVE, CANCELLED , EXPIRED
     }
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus status;

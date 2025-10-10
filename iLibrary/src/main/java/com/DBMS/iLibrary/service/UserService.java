@@ -41,7 +41,7 @@ public class UserService {
     {
         userRepository.deleteById(id);
     }
-    public boolean isValidEmail(String email) {
+    /* public boolean isValidEmail(String email) {
         if (email == null || email.isEmpty()) {
             return false;
         }
@@ -55,7 +55,7 @@ public class UserService {
         // Regex: start with letter, followed by letters, digits or underscore, total length 6-30
         String usernameRegex = "^[A-Za-z][A-Za-z0-9_]{5,29}$";
         return username.matches(usernameRegex);
-    }
+    } Used @Valid instead this. */
 
 
 }

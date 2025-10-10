@@ -41,8 +41,8 @@ public class MailService {
         helper.setSubject("Seat Booking Awaiting Confirmation");
         helper.setText(
                 "Dear Student,\n\n" +
-                        "Your seat has been successfully booked in the library.\n\n" +
-                        "Please find your unique QR code attached to this email. You will need to show this QR code at the library entrance for verification.\n\n" +
+                        "Your seat has been successfully booked in the library.\n" +
+                        "Please find your unique QR code attached to this email. You will need to show this QR code at the library entrance for verification.\n" +
                         "Booking Details:\n" +
                         "- Seat: " + booking.getSeat().getSeatNumber() + "\n" +
                         "- Date: " + bookingDate + "\n" +
@@ -129,7 +129,7 @@ public class MailService {
                 "If any refund applies, the amount will be processed within 2 business days.\n" +
                 "\n" +
                 "We’re sorry to see you cancel your booking, but hope to welcome you back in the library soon.\n" +
-                "If you need to reserve a seat at another time or have any questions, please do not hesitate to contact us.\n" +
+                "If you need to reserve a seat at another time or have any questions, please do not hesitate to contact us at ilibrarymanagementteam@gmail.com.\n" +
                 "\n" +
                 "Thank you for using our library booking system.\n" +
                 "Best regards, \n" +
@@ -207,13 +207,9 @@ public class MailService {
                 "Dear " + user.getUsername() + ",\n" +
                         "\n" +
                         "Thank you for renewing your subscription with iLibrary Management System.\n" +
-                        "\n" +
-                        "We're pleased to inform you that your subscription has been successfully extended. Your new subscription end date is ." + endDate +"\n" +
-                        "\n" +
+                        "We're pleased to inform you that your subscription has been successfully extended. Your new subscription end date is " + endDate +".\n" +
                         "You can continue enjoying full access to our library resources, seat reservations, and all other membership benefits without interruption.\n" +
-                        "\n" +
-                        "If you have any questions or need assistance, please feel free to reach out to us at [Support Email/Phone].\n" +
-                        "\n" +
+                        "If you have any questions or need assistance, please feel free to reach out to us at ilibrarymanagementteam@gmail.com.\n" +
                         "Thank you for being a valued member of our community. We look forward to supporting your learning and exploration for another subscription period!\n" +
                         "\n" +
                         "Best regards,\n" +
@@ -237,13 +233,13 @@ public class MailService {
         String endDate = subscription.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy"));
 
         String body = String.format(
-                "Dear %s,\n\n" +
-                        "We’re sorry to see you go.\n\n" +
+                "Dear %s,\n" +
+                        "We’re sorry to see you go.\n" +
                         "This email is to confirm that your subscription with iLibrary Management System has been successfully canceled as of %s. " +
-                        "You will continue to have access to our services until %s, after which your access will be discontinued.\n\n" +
-                        "If you have any questions or need assistance, please don’t hesitate to contact us at support@ilibrary.com or call (123) 456-7890.\n\n" +
-                        "We value your feedback. If you have a moment, please let us know the reason for your cancellation—it helps us improve our services.\n\n" +
-                        "Thank you for having been part of our community, and we hope to welcome you back in the future.\n\n" +
+                        "You will continue to have access to our services until %s, after which your access will be discontinued.\n" +
+                        "If you have any questions or need assistance, please don’t hesitate to contact us at ilibrarymanagementteam@gmail.com.\n" +
+                        "We value your feedback. If you have a moment, please let us know the reason for your cancellation—it helps us improve our services.\n" +
+                        "Thank you for having been part of our community, and we hope to welcome you back in the future.\n" +
                         "Best regards,\n" +
                         "iLibrary Management Team\n",
                 user.getUsername(), cancelDate, endDate

@@ -27,6 +27,7 @@ public class LibrarianController {
     // uses Mail service
     @PostMapping("/verify-qr")
     public ResponseEntity<?> verifyQrCode(@Valid @RequestBody QrTokendto token) {
+        // Make sure to login as librarian.
         try {
             String response = librarianService.verifyQrToken(token.getQrToken());
             return ResponseEntity.ok(response);

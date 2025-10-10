@@ -7,6 +7,7 @@ import com.DBMS.iLibrary.service.MailService;
 import com.DBMS.iLibrary.service.SubscriptionService;
 import com.DBMS.iLibrary.service.UserService;
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +30,12 @@ public class SubscriptionController {
     @Autowired
     private MailService mailService;
 
-    // Buy's a subscription for a logged in user.Save logged in user's entity to subscription entity field and then save to
+    // Buy's a subscription for a logged-in user.Save logged-in user's entity to subscription entity field and then save to
     // subscription table in DB.
     // RequestBody -> Subscription entity
     // Mail service involved.
     @PostMapping("/buy")
-    public ResponseEntity<?> buyASubscription(@RequestBody Subscription subs) {
+    public ResponseEntity<?> buyASubscription(@Valid @RequestBody Subscription subs) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 //        Long id = subsService.findById(username);
         Optional<User> user = userService.findByUsername(username);
@@ -53,7 +54,7 @@ public class SubscriptionController {
         return new ResponseEntity<>("!! Error while Subscribing a pass", HttpStatus.BAD_REQUEST);
     }
 
-    // get subscription entity belongs to a particular logged in user from subscription table.
+    // get subscription entity belongs to a particular logged-in user from subscription table.
     @GetMapping("/status")
     public ResponseEntity<?> getStatus() //get user subscription status
     {
@@ -136,7 +137,7 @@ public class SubscriptionController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active subscription found for this user");
         }
         Subscription subs = opSubs.get();
-        subs.setStatus(Subscription.SubscriptionStatus.valueOf("PASSIVE"));
+        subs.setStatus(Subscription.SubscriptionStatus.valueOf("CANCELLED"));
         subsRepo.save(subs);
         try {
             mailService.cancelSubscriptionMail(user, subs);

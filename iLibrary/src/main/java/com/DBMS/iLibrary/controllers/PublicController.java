@@ -12,8 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -74,18 +76,25 @@ public class PublicController {
 
     // add user to Spring Security Context Holder simply means logged in user and send a token as a response
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody User user) {
-//        boolean isMailValid = userService.isValidEmail(user.getEmail());
-//        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
-//        if (!isMailValid) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
-//        }
-//        if (!isUserNameValid) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
-//        }
+    public ResponseEntity<?> login(@RequestBody User user) {
+        /*boolean isMailValid = userService.isValidEmail(user.getEmail());
+        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
+        if (!isMailValid) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
+        }
+        if (!isUserNameValid) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
+        } */
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
             String token = jwtUtil.generateToken(user.getUsername());
+//            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+//            Optional<User> optionalUser = userService.findByUsername(username);
+//            if(optionalUser.isEmpty())
+//            {
+//                return new ResponseEntity<>("Email not saved in Database",HttpStatus.NO_CONTENT);
+//            }
+            //String emailTo = optionalUser.get().getEmail();
             return ResponseEntity.ok().body(token);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
