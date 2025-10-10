@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -26,6 +27,7 @@ public class MailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Async
     public void sendBookingMail(ByteArrayOutputStream baos, String to, Booking booking) throws MessagingException {
         Duration duration = Duration.between(booking.getStartTime(), booking.getEndTime());
         long hours = duration.toHours();
@@ -66,7 +68,7 @@ public class MailService {
 
 
     }
-
+    @Async
     public void sendConformationMail(User user, Booking booking) throws MessagingException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
         String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
@@ -105,7 +107,7 @@ public class MailService {
             throw e;  // or handle accordingly
         }
     }
-
+    @Async
     public void sendCancellationMail(User user, Booking booking) throws MessagingException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
         String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
@@ -146,7 +148,7 @@ public class MailService {
             throw e;  // or handle accordingly
         }
     }
-
+    @Async
     public void sendSignupMail(User user) throws MessagingException {
 
         MimeMessage message = mailSender.createMimeMessage();
@@ -163,7 +165,7 @@ public class MailService {
 
         mailSender.send(message);
     }
-
+    @Async
     public void sendSubscriptionMail(User user, Subscription subs) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -192,7 +194,7 @@ public class MailService {
         helper.setText(body, false);
         mailSender.send(message);
     }
-
+    @Async
     public void renewSubscriptionMail(User user, Subscription subscription) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -207,7 +209,7 @@ public class MailService {
                 "Dear " + user.getUsername() + ",\n" +
                         "\n" +
                         "Thank you for renewing your subscription with iLibrary Management System.\n" +
-                        "We're pleased to inform you that your subscription has been successfully extended. Your new subscription end date is " + endDate +".\n" +
+                        "We're pleased to inform you that your subscription has been successfully extended. Your new subscription end date is " + endDate + ".\n" +
                         "You can continue enjoying full access to our library resources, seat reservations, and all other membership benefits without interruption.\n" +
                         "If you have any questions or need assistance, please feel free to reach out to us at ilibrarymanagementteam@gmail.com.\n" +
                         "Thank you for being a valued member of our community. We look forward to supporting your learning and exploration for another subscription period!\n" +
@@ -218,6 +220,7 @@ public class MailService {
         helper.setText(body, false);
         mailSender.send(message);
     }
+    @Async
     public void cancelSubscriptionMail(User user, Subscription subscription) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);

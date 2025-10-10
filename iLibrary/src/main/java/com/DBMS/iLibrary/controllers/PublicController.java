@@ -88,13 +88,6 @@ public class PublicController {
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
             String token = jwtUtil.generateToken(user.getUsername());
-//            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-//            Optional<User> optionalUser = userService.findByUsername(username);
-//            if(optionalUser.isEmpty())
-//            {
-//                return new ResponseEntity<>("Email not saved in Database",HttpStatus.NO_CONTENT);
-//            }
-            //String emailTo = optionalUser.get().getEmail();
             return ResponseEntity.ok().body(token);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");

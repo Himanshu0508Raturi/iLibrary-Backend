@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @RestController
@@ -73,9 +74,9 @@ public class SubscriptionController {
         if (subscription.getEndDate().isBefore(LocalDateTime.now())) {
             return ResponseEntity.ok("Subscription expired on: " + subscription.getEndDate());
         }
-
+        String endDate = subscription.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
         return ResponseEntity.ok("Active subscription: " + subscription.getType()
-                + " (valid until " + subscription.getEndDate() + ")");
+                + " (valid until " + endDate + ")");
     }
 
     // renew subscription of a user if he/she wants , change end date of subscription only.
@@ -137,7 +138,7 @@ public class SubscriptionController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active subscription found for this user");
         }
         Subscription subs = opSubs.get();
-        subs.setStatus(Subscription.SubscriptionStatus.valueOf("CANCELLED"));
+        subs.setStatus(Subscription.SubscriptionStatus.valueOf("PASSIVE"));
         subsRepo.save(subs);
         try {
             mailService.cancelSubscriptionMail(user, subs);

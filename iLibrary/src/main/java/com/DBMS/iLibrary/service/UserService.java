@@ -8,8 +8,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 @Service
@@ -33,12 +36,12 @@ public class UserService {
         }
         return null;
     }
-    public Optional<User> findByUsername(String username)
-    {
+
+    public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
-    public void deleteById(Long id)
-    {
+
+    public void deleteById(Long id) {
         userRepository.deleteById(id);
     }
     /* public boolean isValidEmail(String email) {

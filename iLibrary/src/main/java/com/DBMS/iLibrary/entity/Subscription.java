@@ -30,7 +30,7 @@ public class Subscription {
     private SubscriptionType type;
 
     public enum SubscriptionStatus {
-        ACTIVE, CANCELLED , EXPIRED
+        ACTIVE, PASSIVE
     }
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus status;
