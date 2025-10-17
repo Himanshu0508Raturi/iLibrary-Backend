@@ -32,28 +32,29 @@ public class BookingService {
 
     @Transactional
     public void bookSeat(SeatDTO seatdto, User user, String secretKey) {
+        LocalDateTime now = LocalDateTime.now();
         Seat seat = seatService.findBySeatNumber(seatdto.getSeatNumber());
         if (seat == null) {
-            throw new IllegalArgumentException("Seat not found");
+            throw new IllegalArgumentException("Seat not found. Enter valid seat number.");
         }
         if (seat.getStatus() == Seat.SeatStatus.UNDER_MAINTENANCE) {
-            throw new IllegalStateException("Seat under maintenance");
+            throw new IllegalStateException("Seat under maintenance,not available for booking");
         }
         if (seat.getStatus() != Seat.SeatStatus.AVAILABLE) {
-            throw new IllegalStateException("Seat not available");
+            throw new IllegalStateException("Seat not available. Already Booked.");
         }
 
         seat.setStatus(Seat.SeatStatus.BOOKED);
         seatRepo.save(seat);
 
         Booking booking = new Booking();
+        booking.setHrs(seatdto.getHours());
         booking.setUser(user);
         booking.setSeat(seat);
-        booking.setBookingDate(LocalDateTime.now());
-        booking.setStartTime(LocalDateTime.now());
-        booking.setEndTime(LocalDateTime.now().plusHours(seatdto.getHours()));
+        booking.setBookingDate(now);
+        booking.setStartTime(now);
+        booking.setEndTime(now.plusHours(seatdto.getHours()));
         booking.setStatus(Booking.BookingStatus.PENDING);
-        booking.setCreatedOffline(false);
         bookingRepo.save(booking);
 
         // Generate JWT QR data

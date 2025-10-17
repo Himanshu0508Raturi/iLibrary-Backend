@@ -20,6 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/subscription")
+@CrossOrigin
 public class SubscriptionController {
     @Autowired
     private SubscriptionService subsService;

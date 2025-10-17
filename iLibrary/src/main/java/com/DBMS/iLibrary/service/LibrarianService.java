@@ -51,26 +51,33 @@ public class LibrarianService {
         if (!booking.getStatus().toString().equals(status)) {
             throw new IllegalStateException("Booking status mismatch");
         }
-        LocalDateTime endTime = LocalDateTime.parse(endTimeStr);
+        LocalDateTime endTime = LocalDateTime.parse(claims.get("endTime").toString());
         if (LocalDateTime.now().isAfter(endTime)) {
             throw new IllegalStateException("Booking expired");
         }
+        //1
+        if (LocalDateTime.now().isAfter(endTime)) {
+            throw new IllegalStateException("Booking expired");
+        }
+        int bookedHours = booking.getHrs();  // original duration requested
+        LocalDateTime now = LocalDateTime.now();
+
 
         booking.setStatus(Booking.BookingStatus.CONFIRMED);
-        booking.setStartTime(LocalDateTime.now());
-        Duration duration = Duration.between(booking.getStartTime(), booking.getEndTime());
-        long hours = duration.toHours();
-        long minutes = duration.toMinutesPart(); // Java 9+
-        booking.setEndTime(LocalDateTime.now().plusHours(hours));
+        booking.setStartTime(now);
+
+        booking.setEndTime(now.plusHours(bookedHours));
         User user = booking.getUser();
         bookingRepo.save(booking);
-        try
-        {
-            mailService.sendConformationMail(user , booking);
+        try {
+            mailService.sendConformationMail(user, booking);
         } catch (MessagingException e) {
             System.out.print("Error at librarian service conform message function.");
             throw new RuntimeException(e);
         }
+        Duration duration = Duration.between(booking.getStartTime(), booking.getEndTime());
+        long hours = duration.toHours();
+        long minutes = duration.toMinutesPart(); // Java 9+
         return "Booking verified successfully for seat number: " + seatNumber +
                 ", Duration: " + hours + " hours " + minutes + " minutes";
     }

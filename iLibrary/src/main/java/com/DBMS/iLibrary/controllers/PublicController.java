@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/public")
+@CrossOrigin
 public class PublicController {
     @Autowired
     private UserService userService;

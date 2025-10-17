@@ -39,5 +39,5 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
-    private boolean createdOffline;
+    private int hrs;
 }

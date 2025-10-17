@@ -1,6 +1,8 @@
 package com.DBMS.iLibrary.service;
 
+import com.DBMS.iLibrary.entity.Booking;
 import com.DBMS.iLibrary.entity.User;
+import com.DBMS.iLibrary.repository.BookingRepo;
 import com.DBMS.iLibrary.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -10,15 +12,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UserService {
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BookingRepo bookingRepo;
 
     private static final PasswordEncoder passwordencoder = new BCryptPasswordEncoder();
 
@@ -59,6 +61,14 @@ public class UserService {
         String usernameRegex = "^[A-Za-z][A-Za-z0-9_]{5,29}$";
         return username.matches(usernameRegex);
     } Used @Valid instead this. */
+    public void changeUserName(User user , String newUsername)
+    {
+        user.setUsername(newUsername);
+        userRepository.save(user);
+    }
 
-
+    public List<Booking> getUserBookingHistory(User user)
+    {
+        return bookingRepo.findAllById(Collections.singleton(user.getId()));
+    }
 }

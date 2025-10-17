@@ -13,13 +13,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.security.SecureRandom;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 @Service
 public class MailService {
@@ -36,13 +33,13 @@ public class MailService {
         //Date Formatter.
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
         String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
-
+        User user = booking.getUser();
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(to);
         helper.setSubject("Seat Booking Awaiting Confirmation");
         helper.setText(
-                "Dear Student,\n\n" +
+                "Dear " + user.getUsername()+",\n\n" +
                         "Your seat has been successfully booked in the library.\n" +
                         "Please find your unique QR code attached to this email. You will need to show this QR code at the library entrance for verification.\n" +
                         "Booking Details:\n" +
