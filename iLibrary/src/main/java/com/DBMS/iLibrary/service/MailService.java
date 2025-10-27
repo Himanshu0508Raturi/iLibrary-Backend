@@ -1,8 +1,25 @@
 package com.DBMS.iLibrary.service;
 
 import com.DBMS.iLibrary.entity.Booking;
+import com.DBMS.iLibrary.entity.SeatPayment;
 import com.DBMS.iLibrary.entity.Subscription;
 import com.DBMS.iLibrary.entity.User;
+import com.DBMS.iLibrary.repository.BookingRepo;
+import com.DBMS.iLibrary.repository.SeatPaymentRepository;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.stripe.model.Event;
+import com.stripe.model.EventDataObjectDeserializer;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,18 +28,26 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import com.stripe.model.checkout.Session;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class MailService {
 
     @Autowired
     private JavaMailSender mailSender;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private BookingRepo bookingRepo;
+    @Autowired
+    private SeatPaymentRepository seatPaymentRepository;
 
     @Async
     public void sendBookingMail(ByteArrayOutputStream baos, String to, Booking booking) throws MessagingException {
@@ -39,7 +64,7 @@ public class MailService {
         helper.setTo(to);
         helper.setSubject("Seat Booking Awaiting Confirmation");
         helper.setText(
-                "Dear " + user.getUsername()+",\n\n" +
+                "Dear " + user.getUsername() + ",\n\n" +
                         "Your seat has been successfully booked in the library.\n" +
                         "Please find your unique QR code attached to this email. You will need to show this QR code at the library entrance for verification.\n" +
                         "Booking Details:\n" +
@@ -47,6 +72,7 @@ public class MailService {
                         "- Date: " + bookingDate + "\n" +
                         "- Status: " + booking.getStatus() + "\n" +
                         "- Time: " + time + "\n" +
+                        "- Amount: ₹" + booking.getAmount() + "\n" +
                         "Note:\n" +
                         "- Please keep your QR code ready for entrance verification.\n" +
                         "- Do not share this QR code with others.\n" +
@@ -59,12 +85,207 @@ public class MailService {
         try {
             mailSender.send(message);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw e;  // or handle accordingly
+            throw new RuntimeException("Failed to send booking mail.");
+        }
+    }
+
+    @Async
+    public void sendPaymentConformMail(Event event) throws MessagingException {
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+        Session session = (Session) deserializer.getObject().get();
+        String userId = session.getMetadata().get("userId");
+        String username = session.getMetadata().get("username");
+        User user = userService.findByUsername(username).get();
+        List<Booking> allBookings = bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.PENDING);
+        if (allBookings == null || allBookings.isEmpty()) {
+            System.out.printf("No pending bookings found for user: %s", user.getUsername());
+            return; // or throw custom exception if appropriate
+        }
+        Booking booking = new Booking();
+        if (allBookings.size() > 1)
+            booking = allBookings.get(allBookings.size() - 1);
+        if (allBookings.size() == 1)
+            booking = allBookings.get(0);
+
+        List<SeatPayment> payments = seatPaymentRepository.findAllByUserId(user.getId());
+        SeatPayment seatPayment = new SeatPayment();
+        if (!payments.isEmpty()) {
+            seatPayment = payments.get(0); // Choose the first or latest entry
+            // Use seatPayment safely now
+        }
+        byte[] pdfBytes = createInvoicePdfBytes(booking, seatPayment);
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(user.getEmail());
+        helper.setSubject("Seat Payment Successful");
+        String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
+        helper.setText(
+                "Dear " + user.getUsername() + ",\n\n" +
+                        "We are pleased to confirm that your payment has been successfully processed. Your transaction is complete, please verify the earlier received QR at entrance to our librarian and officially confirmed your seat.\n" +
+
+                        "Here are the details of your payment for your reference:\n" +
+
+                        "Payment Status: Successful\n" +
+
+                        "Payment Date: " + seatPayment.getTransactionDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy")) + "\n" +
+
+                        "Transaction ID: " + seatPayment.getSessionId() + "\n" +
+
+                        "Amount Paid: ₹" + booking.getAmount() + "\n" +
+
+                        "Payment Method: Stripe Credit Card" + "\n" +
+
+                        "Please keep this email as your official receipt. Your invoice is attached for your convenience. Should you have any questions, require assistance, or wish to make modifications, please do not hesitate to reach out to our support team at ilibrarymanagementteam@gmail.com." + "\n\n" +
+
+                        "Thank you for choosing iLibrary. We appreciate your trust and look forward to providing you with an excellent experience.\n" +
+
+                        "Best regards," + "\n" +
+                        "iLibrary Management Team",
+                false
+        );
+        // Attach PDF invoice
+        helper.addAttachment("iLibrary_Invoice.pdf", new ByteArrayResource(pdfBytes));
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send payment conform mail.");
+        }
+    }
+
+    public static byte[] createInvoicePdfBytes(Booking booking, SeatPayment seatPayment) {
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdfDoc = new PdfDocument(writer);
+            Document document = new Document(pdfDoc);
+
+            // (Same content creation code as before - add paragraphs, tables etc)
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            Paragraph title = new Paragraph("iLibrary Seat Booking Invoice")
+                    .setFont(boldFont)
+                    .setFontSize(18)
+                    .setTextAlignment(TextAlignment.CENTER);
+            document.add(title);
+            document.add(new Paragraph(" "));
+            // proper date format
+            String bookingDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
+            Table headerTable = new Table(UnitValue.createPercentArray(new float[]{3, 3})).useAllAvailableWidth();
+            headerTable.addCell(new Cell().add(new Paragraph("Invoice No: " + booking.getUser().getId())).setBorder(Border.NO_BORDER));
+            headerTable.addCell(new Cell().add(new Paragraph("Date: " + bookingDate)).setBorder(Border.NO_BORDER));
+            headerTable.addCell(new Cell().add(new Paragraph("Name: " + booking.getUser().getUsername())).setBorder(Border.NO_BORDER));
+            headerTable.addCell(new Cell().add(new Paragraph("")).setBorder(Border.NO_BORDER));
+            document.add(headerTable);
+
+            document.add(new Paragraph(" "));
+            double totalAmountPaid = 50.00 * booking.getHrs();
+            double gst = totalAmountPaid * 0.18;
+            double grandTotal = gst + totalAmountPaid;
+            Paragraph billToTitle = new Paragraph("Bill To:").setFont(boldFont);
+            document.add(billToTitle);
+            document.add(new Paragraph(booking.getUser().getUsername() + "\n" + booking.getUser().getEmail()));
+            document.add(new Paragraph(" "));
+
+            Table bookingTable = new Table(UnitValue.createPercentArray(new float[]{6, 2, 2, 2})).useAllAvailableWidth();
+            bookingTable.addHeaderCell(new Cell().add(new Paragraph("Description")).setFont(boldFont));
+            bookingTable.addHeaderCell(new Cell().add(new Paragraph("Time")).setFont(boldFont));
+            bookingTable.addHeaderCell(new Cell().add(new Paragraph("Rate (per hour)")).setFont(boldFont));
+            bookingTable.addHeaderCell(new Cell().add(new Paragraph("Amount (INR)")).setFont(boldFont));
+
+            bookingTable.addCell(new Cell().add(new Paragraph(booking.getSeat().getId() + ", " + booking.getSeat().getLocation() + ", " + booking.getSeat().getSeatNumber() + ".")));
+            bookingTable.addCell(new Cell().add(new Paragraph(String.valueOf(booking.getHrs()))));
+            bookingTable.addCell(new Cell().add(new Paragraph("50.00")));
+            bookingTable.addCell(new Cell().add(new Paragraph(String.format("₹%.2f", totalAmountPaid))));
+            document.add(bookingTable);
+
+            document.add(new Paragraph(" "));
+
+
+            Table totalsTable = new Table(UnitValue.createPercentArray(new float[]{6, 6})).useAllAvailableWidth();
+
+            totalsTable.addCell(new Cell().add(new Paragraph("Total Amount Paid:")).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.LEFT));
+            totalsTable.addCell(new Cell().add(new Paragraph(String.format("₹%.2f", totalAmountPaid))).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT));
+
+            totalsTable.addCell(new Cell().add(new Paragraph("Payment Method:")).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.LEFT));
+            totalsTable.addCell(new Cell().add(new Paragraph("Online via card")).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT));
+
+            totalsTable.addCell(new Cell().add(new Paragraph("GST/Taxes Applied:")).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.LEFT));
+            totalsTable.addCell(new Cell().add(new Paragraph(String.format("₹%.2f", gst))).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT));
+
+            // Bold for grand total
+            totalsTable.addCell(new Cell().add(new Paragraph("Grand Total:").setFont(boldFont)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.LEFT));
+            totalsTable.addCell(new Cell().add(new Paragraph(String.format("₹%.2f", grandTotal)).setFont(boldFont)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.RIGHT));
+
+            document.add(totalsTable);
+
+
+            document.add(new Paragraph(" "));
+            PdfFont italicFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_OBLIQUE);
+            document.add(new Paragraph("Thank you for choosing iLibrary.").setTextAlignment(TextAlignment.CENTER).setFont(italicFont));
+            document.add(new Paragraph("Your seat booking is confirmed. If you have any questions, contact ilibrarymanagementteam@gmail.com").setTextAlignment(TextAlignment.CENTER));
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("iLibrary").setTextAlignment(TextAlignment.CENTER).setFont(boldFont));
+            document.add(new Paragraph("Customer Care: ilibrarymanagementteam@gmail.com").setTextAlignment(TextAlignment.CENTER));
+            document.add(new Paragraph("Website: To be launched soon.").setTextAlignment(TextAlignment.CENTER));
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("This invoice is system-generated and valid as a tax/commercial invoice.").setFontSize(8).setTextAlignment(TextAlignment.CENTER));
+
+            document.close();
+
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate PDF invoice.");
+        }
+    }
+
+    @Async
+    public void sendPaymentCancelMail(Event event) throws MessagingException {
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+        Session session = (Session) deserializer.getObject().get();
+        String username = session.getMetadata().get("username");
+        User user = userService.findByUsername(username).get();
+        List<Booking> allBookings = bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.PENDING);
+        Booking booking = allBookings.get(0);
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(user.getEmail());
+        helper.setSubject("Payment Unsuccessful – Seat Booking Cancelled at iLibrary");
+        helper.setText(
+                "Dear " + user.getUsername() + ",\n" +
+                        "\n" +
+                        "We noticed that your recent payment attempt for seat booking on iLibrary was unsuccessful or cancelled.  \n" +
+                        "Unfortunately, your seat has not been confirmed due to the incomplete payment process.\n" +
+                        "Here are the details of your attempted booking:\n" +
+                        "\n" +
+                        "• Booking Date: " + booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy")) + "\n" +
+                        "• Seat Number: " + booking.getSeat().getSeatNumber() + "\n" +
+                        "• Hours Selected: " + booking.getHrs() + "\n" +
+                        "• Amount: ₹" + booking.getAmount() + "\n" +
+                        "• Payment Status: Cancelled / Failed  \n" +
+                        "\n" +
+                        "If this was a mistake or an interruption during checkout, don’t worry — you can try completing the payment again through your iLibrary dashboard.  \n" +
+                        "Please note that your selected seat has been released back to the available pool, and you’ll need to re-book if you still wish to reserve it.  \n" +
+
+                        "For any issues or assistance, feel free to reach out to our support team at ilibrarymanagementteam@gmail.com.  \n" +
+
+                        "We appreciate your interest in iLibrary and hope to see you back soon.\n" +
+
+                        "Warm regards,  \n" +
+                        "iLibrary Management Team  \n" +
+                        "_“Read. Learn. Grow.”_",
+                false
+        );
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send payment conform mail.");
         }
 
 
     }
+
     @Async
     public void sendConformationMail(User user, Booking booking) throws MessagingException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
@@ -100,10 +321,11 @@ public class MailService {
         try {
             mailSender.send(message);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw e;  // or handle accordingly
+
+            throw new RuntimeException("Failed to send seat booking mail.");
         }
     }
+
     @Async
     public void sendCancellationMail(User user, Booking booking) throws MessagingException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
@@ -141,10 +363,10 @@ public class MailService {
         try {
             mailSender.send(message);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw e;  // or handle accordingly
+            throw new RuntimeException("Failed to send cancellation mail.");
         }
     }
+
     @Async
     public void sendSignupMail(User user) throws MessagingException {
 
@@ -162,6 +384,7 @@ public class MailService {
 
         mailSender.send(message);
     }
+
     @Async
     public void sendSubscriptionMail(User user, Subscription subs) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
@@ -191,6 +414,7 @@ public class MailService {
         helper.setText(body, false);
         mailSender.send(message);
     }
+
     @Async
     public void renewSubscriptionMail(User user, Subscription subscription) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
@@ -217,6 +441,7 @@ public class MailService {
         helper.setText(body, false);
         mailSender.send(message);
     }
+
     @Async
     public void cancelSubscriptionMail(User user, Subscription subscription) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
@@ -233,15 +458,17 @@ public class MailService {
         String endDate = subscription.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy"));
 
         String body = String.format(
-                "Dear %s,\n" +
-                        "We’re sorry to see you go.\n" +
-                        "This email is to confirm that your subscription with iLibrary Management System has been successfully canceled as of %s. " +
-                        "You will continue to have access to our services until %s, after which your access will be discontinued.\n" +
-                        "If you have any questions or need assistance, please don’t hesitate to contact us at ilibrarymanagementteam@gmail.com.\n" +
-                        "We value your feedback. If you have a moment, please let us know the reason for your cancellation—it helps us improve our services.\n" +
-                        "Thank you for having been part of our community, and we hope to welcome you back in the future.\n" +
-                        "Best regards,\n" +
-                        "iLibrary Management Team\n",
+                """
+                        Dear %s,
+                        We’re sorry to see you go.
+                        This email is to confirm that your subscription with iLibrary Management System has been successfully canceled as of %s. \
+                        You will continue to have access to our services until %s, after which your access will be discontinued.
+                        If you have any questions or need assistance, please don’t hesitate to contact us at ilibrarymanagementteam@gmail.com.
+                        We value your feedback. If you have a moment, please let us know the reason for your cancellation—it helps us improve our services.
+                        Thank you for having been part of our community, and we hope to welcome you back in the future.
+                        Best regards,
+                        iLibrary Management Team
+                        """,
                 user.getUsername(), cancelDate, endDate
         );
 

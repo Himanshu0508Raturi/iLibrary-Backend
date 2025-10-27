@@ -61,8 +61,8 @@ public class LibrarianService {
         }
         int bookedHours = booking.getHrs();  // original duration requested
         LocalDateTime now = LocalDateTime.now();
-
-
+        if(!booking.getPaymentDone())
+            return "Payment Has not yet done.";
         booking.setStatus(Booking.BookingStatus.CONFIRMED);
         booking.setStartTime(now);
 

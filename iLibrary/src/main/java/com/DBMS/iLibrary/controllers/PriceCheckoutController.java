@@ -5,6 +5,7 @@ import com.DBMS.iLibrary.entity.PaymentRequest;
 import com.DBMS.iLibrary.entity.StripeResponse;
 import com.DBMS.iLibrary.entity.User;
 import com.DBMS.iLibrary.repository.BookingRepo;
+import com.DBMS.iLibrary.service.SeatPaymentService;
 import com.DBMS.iLibrary.service.StripePaymentService;
 import com.DBMS.iLibrary.service.UserService;
 import org.hibernate.NonUniqueResultException;
@@ -27,6 +28,8 @@ public class PriceCheckoutController {
     private UserService userService;
     @Autowired
     private BookingRepo bookingRepo;
+    @Autowired
+    private SeatPaymentService seatPaymentService;
 
     @GetMapping("/checkout")
     public ResponseEntity<?> checkoutProducts() {
@@ -45,14 +48,25 @@ public class PriceCheckoutController {
         }
 
         Booking booking = bookings.get(0);
+
         // 3 Create payment request
+        double basePrice = 50.00;
+        double totalAmount = 50.00 * booking.getHrs();
+        double gstPerPerson = (totalAmount * 0.18)/booking.getHrs();
+        double amtToSet = basePrice+ gstPerPerson;
         PaymentRequest paymentRequest = new PaymentRequest();
         paymentRequest.setName(user.getUsername());
         paymentRequest.setCurrency("INR");
         paymentRequest.setQuantity((long) booking.getHrs());
-        paymentRequest.setAmount(5000L);
+        paymentRequest.setAmount((long) (amtToSet * 100));
         // 4. Call Stripe service
-        StripeResponse stripeResponse = stripePaymentService.checkoutProducts(paymentRequest);
+        StripeResponse stripeResponse = stripePaymentService.checkoutProducts(paymentRequest, user);
+        //calling SeatServicePayment.saveDataBeforePayment() so that data was saved in db.
+        try {
+            seatPaymentService.saveDataBeforePayment(booking, stripeResponse.getSessionId());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("RuntimeError while saving entries to SeatPayment table.");
+        }
         // 5. Return structured response
         return ResponseEntity
                 .status(HttpStatus.OK)

@@ -27,7 +27,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**").permitAll()
+                         .requestMatchers("/public/**","/webhook/**").permitAll()
                         .requestMatchers("/success.html", "/cancel.html").permitAll()
                         .requestMatchers("/librarian/**").hasAnyAuthority("ROLE_LIBRARIAN","ROLE_ADMIN")
                         .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN")

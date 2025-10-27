@@ -2,6 +2,7 @@ package com.DBMS.iLibrary.service;
 
 import com.DBMS.iLibrary.entity.PaymentRequest;
 import com.DBMS.iLibrary.entity.StripeResponse;
+import com.DBMS.iLibrary.entity.User;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
@@ -15,7 +16,7 @@ public class StripePaymentService {
     @Value("${stripe.secretKey}")
     private String secretKey;
 
-    public StripeResponse checkoutProducts(PaymentRequest paymentRequest) {
+    public StripeResponse checkoutProducts(PaymentRequest paymentRequest, User user) {
         Stripe.apiKey = secretKey;
 
         try {
@@ -46,6 +47,8 @@ public class StripePaymentService {
                     .setSuccessUrl("http://localhost:8080/success.html")
                     .setCancelUrl("http://localhost:8080/cancel.html")
                     .addLineItem(lineItem)
+                    .putMetadata("userId",user.getId().toString())
+                    .putMetadata("username", user.getUsername())
                     .build();
 
             Session session = Session.create(params);

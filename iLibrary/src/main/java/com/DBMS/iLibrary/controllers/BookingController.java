@@ -2,7 +2,6 @@ package com.DBMS.iLibrary.controllers;
 
 import com.DBMS.iLibrary.entity.*;
 import com.DBMS.iLibrary.repository.BookingRepo;
-import com.DBMS.iLibrary.repository.SeatRepo;
 import com.DBMS.iLibrary.service.BookingService;
 import com.DBMS.iLibrary.service.MailService;
 import com.DBMS.iLibrary.service.UserService;
@@ -20,7 +19,6 @@ import java.util.Optional;
 @RequestMapping("/booking")
 @CrossOrigin
 public class BookingController {
-
     @Autowired
     private UserService userService;
     @Value("${app.jwtSecret}")
@@ -34,6 +32,7 @@ public class BookingController {
     // Books a seat for a logged in user in booking table : Request Body : seatdto.
     // Transactional bookseat() method().
     // Mail service Involved.
+//    @CachePut(key = "abc")
     @PostMapping("/seat")
     public ResponseEntity<?> bookASeat(@Valid @RequestBody SeatDTO seatdto) {
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
@@ -42,6 +41,9 @@ public class BookingController {
         }
         User user = opUser.get();
         try {
+//            if(seatdto.getIsMongoEnabled() == Boolean.TRUE){
+//                //mongo flow
+//            }
             bookingService.bookSeat(seatdto, user, secretKey);
             return new ResponseEntity<>("Seat No " + seatdto.getSeatNumber() + " booked Successfully", HttpStatus.OK);
         } catch (IllegalArgumentException | IllegalStateException ex) {
@@ -54,6 +56,7 @@ public class BookingController {
     // table for history purpose , also seat status is set to AVAILABLE in seat table.
     // mail service involved
     //Transactional cancelBooking() method
+//    @CacheEvict()
     @DeleteMapping("/cancel/{bookingId}")
     public ResponseEntity<?> cancelABooking(@Valid @PathVariable Long bookingId) {
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());

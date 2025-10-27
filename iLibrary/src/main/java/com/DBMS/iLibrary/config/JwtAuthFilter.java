@@ -27,6 +27,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+//        String path = request.getRequestURI();
+//        if (path.startsWith("/webhook") ||
+//                path.startsWith("/public/") ||
+//                path.equals("/success.html") ||
+//                path.equals("/cancel.html")) {
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
+
 
         final String authHeader = request.getHeader("Authorization");
 
@@ -37,7 +46,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             jwtToken = authHeader.substring(7);
             username = jwtUtil.extractUsername(jwtToken);
         }
-
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 

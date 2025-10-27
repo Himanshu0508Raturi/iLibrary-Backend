@@ -29,7 +29,6 @@ public class Booking {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-
     public enum BookingStatus {
         PENDING,     // Booking has been requested but not yet confirmed
         CONFIRMED,   // Booking is approved and valid
@@ -40,4 +39,9 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
     private int hrs;
+    private double amount;
+    private boolean paymentDone;
+    public boolean getPaymentDone() {
+        return paymentDone;
+    }
 }

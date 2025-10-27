@@ -12,11 +12,9 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -55,6 +53,10 @@ public class BookingService {
         booking.setStartTime(now);
         booking.setEndTime(now.plusHours(seatdto.getHours()));
         booking.setStatus(Booking.BookingStatus.PENDING);
+        double totalAmountPaid = 50.00 *booking.getHrs();
+        double gst = totalAmountPaid * 0.18;
+        double grandTotal = gst + totalAmountPaid;
+        booking.setAmount(grandTotal);
         bookingRepo.save(booking);
 
         // Generate JWT QR data
