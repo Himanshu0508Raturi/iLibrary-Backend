@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -34,7 +35,7 @@ public class Subscription {
     }
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus status;
-    private int price;
+    private BigDecimal amount;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 }

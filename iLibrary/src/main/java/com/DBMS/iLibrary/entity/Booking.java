@@ -40,8 +40,4 @@ public class Booking {
     private BookingStatus status;
     private int hrs;
     private double amount;
-    private boolean paymentDone;
-    public boolean getPaymentDone() {
-        return paymentDone;
-    }
 }

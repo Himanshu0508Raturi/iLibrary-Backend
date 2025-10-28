@@ -13,11 +13,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class StripePaymentService {
 
-    @Value("${stripe.secretKey}")
-    private String secretKey;
+    @Value("${stripe.secretKey1}")
+    private String secretKey1;
+
+    @Value("${stripe.secretKey2}")
+    private String secretKey2;
 
     public StripeResponse checkoutProducts(PaymentRequest paymentRequest, User user) {
-        Stripe.apiKey = secretKey;
+        // check from which webhook request is coming.
+        if(paymentRequest.getName().equals("Seat Payment"))
+        {
+            Stripe.apiKey = secretKey1;
+        }else if (paymentRequest.getName().equals("Subscription Payment")){
+            Stripe.apiKey = secretKey2;
+        }
 
         try {
             // Create product data

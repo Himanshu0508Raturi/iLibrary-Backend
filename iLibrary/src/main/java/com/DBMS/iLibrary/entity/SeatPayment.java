@@ -16,11 +16,11 @@ public class SeatPayment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne /*Each SeatPayment record is linked to exactly one user (the one who made the payment).But one user can have many seat payments in total.*/
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
+    @ManyToOne /*Each SeatPayment is linked to one specific seat.But a seat can be associated with multiple payments (if it’s booked and released multiple times).*/
     @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
 
@@ -28,7 +28,7 @@ public class SeatPayment {
     private LocalDateTime transactionDate = LocalDateTime.now();
     private String sessionId; // used in saveDataAfterPayment for finding payment.
     @Enumerated(EnumType.STRING)
-    private SeatPayment.PaymentStatus status;
+    private SeatPayment.PaymentStatus status = PaymentStatus.PENDING;
 
     public enum PaymentStatus {
         PENDING,

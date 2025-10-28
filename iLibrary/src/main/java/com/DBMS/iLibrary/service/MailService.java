@@ -405,7 +405,7 @@ public class MailService {
                         "  - Subscription Type: " + String.valueOf(subs.getType()) + "\n" +
                         "  - Valid From: " + startDate + "\n" +
                         "  - Valid Until: " + endDate + "\n" +
-                        "  - Total Price: ₹" + subs.getPrice() + "\n\n" +
+                        "  - Total Price: ₹" + subs.getAmount() + "\n\n" +
                         "You now have full access to all member benefits during the active period of your subscription.\n" +
                         "If you have any questions, please reply to this email or contact the library.\n\n" +
                         "Thank you for choosing our library services!\n\n" +
@@ -476,4 +476,61 @@ public class MailService {
         mailSender.send(message);
     }
 
+    @Async
+        public void     sendSubscriptionPaymentConformMail(Event event) throws MessagingException {
+        // Deserialize Stripe event data safely
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+        Session session = (Session) deserializer.getObject()
+                .orElseThrow(() -> new IllegalArgumentException("Unable to deserialize Stripe session"));
+
+        String username = session.getMetadata().get("username");
+
+        User user = userService.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found for username: " + username));
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        String body = """
+                Hello %s,<br><br>
+                Your subscription payment has been <b>successfully processed</b>.<br>
+                <b>Amount Paid:</b> ₹%.2f<br>
+                <b>Payment ID:</b> %s<br><br>
+                Thank you for your subscription!<br>
+                - The iLibrary Management Team
+                """.formatted(user.getUsername(), session.getAmountTotal() / 100.0, session.getId());
+        helper.setSubject("Subscription Payment Successful");
+        helper.setTo(user.getEmail());
+        helper.setText(body,true);
+        mailSender.send(message);
+    }
+    @Async
+    public void sendSubscriptionPaymentCancelMail(Event event) throws MessagingException {
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+        Session session = (Session) deserializer.getObject()
+                .orElseThrow(() -> new IllegalArgumentException("Unable to deserialize Stripe session"));
+
+        String username = session.getMetadata().get("username");
+        User user = userService.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found for username: " + username));
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        String subject = "Subscription Payment Canceled";
+        String body = """
+                Hello %s,<br><br>
+                Unfortunately, your subscription payment was <b>not completed</b> or was <b>canceled</b>.<br><br>
+                <b>Payment ID:</b> %s<br>
+                <b>Reason:</b> Payment failed or was canceled before completion.<br><br>
+                Don’t worry — you can retry your payment anytime to continue your subscription.<br>
+                <br>
+                — The iLibrary Management Team
+                """.formatted(user.getUsername(), session.getId());
+
+        helper.setTo(user.getEmail());
+        helper.setSubject(subject);
+        helper.setText(body, true);
+
+        mailSender.send(message);
+    }
 }

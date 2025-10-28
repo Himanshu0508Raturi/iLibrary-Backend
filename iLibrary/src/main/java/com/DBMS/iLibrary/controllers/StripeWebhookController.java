@@ -21,30 +21,57 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 public class StripeWebhookController {
 
-    @Value("${stripe.secretKey}")
-    private String secretKey;
+    @Value("${stripe.secretKey1}")
+    private String secretKey1;
 
-    @Value("${stripe.webhookSecret}")
-    private String webhookSecret;
+    @Value("${stripe.secretKey2}")
+    private String secretKey2;
+
+    @Value("${stripe.seatPaymentWebhookSecret}")
+    private String seatPaymentWebhookSecret;
+
+    @Value("${stripe.subscriptionPaymentWebhookSecret}")
+    private String subscriptionPaymentWebhookSecret;
 
     @Autowired
     private StripeWebhookService stripeWebhookService;
 
-    @PostMapping
-    public ResponseEntity<String> handleStripeWebhook(
+    @PostMapping("/seat")
+    public ResponseEntity<String> handleStripeWebhookForSeatBooking(
             @RequestBody String payload,
             @RequestHeader("Stripe-Signature") String sigHeader) {
 
-        Stripe.apiKey = secretKey;
+        Stripe.apiKey = secretKey1;
         Event event;
 
         try {
-            event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
+            event = Webhook.constructEvent(payload, sigHeader, seatPaymentWebhookSecret);
         } catch (SignatureVerificationException e) {
             return ResponseEntity.badRequest().body(" Invalid signature");
         }
         try {
-            stripeWebhookService.webhookEvent(event);
+            stripeWebhookService.webhookEventForSeatPayment(event);
+        } catch (MessagingException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while sending payment mail to user.");
+        }
+        return ResponseEntity.ok(" Webhook processed successfully");
+    }
+
+    @PostMapping("/subscription")
+    public ResponseEntity<?> handleStripeWebhookForSubscription(
+            @RequestBody String payload,
+            @RequestHeader("Stripe-Signature") String sigHeader) {
+
+        Stripe.apiKey = secretKey2;
+        Event event;
+
+        try {
+            event = Webhook.constructEvent(payload, sigHeader, subscriptionPaymentWebhookSecret);
+        } catch (SignatureVerificationException e) {
+            return ResponseEntity.badRequest().body(" Invalid signature");
+        }
+        try {
+            stripeWebhookService.webhookEventForSubscriptionPayment(event);
         } catch (MessagingException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while sending payment mail to user.");
         }

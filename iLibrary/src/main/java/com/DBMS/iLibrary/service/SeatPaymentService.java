@@ -44,19 +44,12 @@ public class SeatPaymentService {
         }
     }
 
-    //method to call after webhook
+    //method to call after webhook proceed.(called from webhook controller)
     public void saveDataAfterPayment(Session session) {
         String sessionId = session.getId();
         Optional<SeatPayment> opPayment = seatPaymentRepository.findBySessionId(sessionId);
         if (opPayment.isPresent()) {
             SeatPayment seatPayment = opPayment.get();
-            User user = seatPayment.getUser();
-            List<Booking> allBooking = bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.PENDING);
-            if (!allBooking.isEmpty()) {
-                Booking booking = allBooking.get(0);
-                booking.setPaymentDone(true);
-                bookingRepo.save(booking);
-            }
             seatPayment.setStatus(SeatPayment.PaymentStatus.COMPLETED); // or CONFIRMED
             seatPaymentRepository.save(seatPayment);
         } else {
@@ -70,16 +63,7 @@ public class SeatPaymentService {
         Optional<SeatPayment> opPayment = seatPaymentRepository.findBySessionId(sessionId);
         if (opPayment.isPresent()) {
             SeatPayment seatPayment = opPayment.get();
-            User user = seatPayment.getUser();
             // Direct Cancel booking if there is any error in payment or no payment was made.
-            List<Booking> allBooking = bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.PENDING);
-            if (!allBooking.isEmpty()) {
-                Booking booking = allBooking.get(0);
-                booking.setStatus(Booking.BookingStatus.FAILED);
-                booking.setPaymentDone(false);
-                bookingRepo.save(booking);
-            }
-
             seatPayment.setStatus(SeatPayment.PaymentStatus.FAILED); // or CONFIRMED
             seatPaymentRepository.save(seatPayment);
         } else {

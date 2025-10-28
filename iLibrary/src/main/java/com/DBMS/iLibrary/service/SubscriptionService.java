@@ -7,6 +7,7 @@ import com.DBMS.iLibrary.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -31,20 +32,20 @@ public class SubscriptionService {
         String type = String.valueOf(subs.getType());
         if(type.equals("WEEKLY"))
         {
-            subs.setPrice(600);
+            subs.setAmount(BigDecimal.valueOf(600));
             subs.setEndDate(LocalDateTime.now().plusDays(7));
         }else if(type.equals("MONTHLY"))
         {
-            subs.setPrice(3500);
+            subs.setAmount(BigDecimal.valueOf(3500));
             subs.setEndDate(LocalDateTime.now().plusMonths(1));
         } else if (type.equals("YEARLY")) {
-            subs.setPrice(12000);
+            subs.setAmount(BigDecimal.valueOf(12000));
             subs.setEndDate(LocalDateTime.now().plusYears(1));
         }else
         {
             return false;
         }
-        subs.setStatus(Subscription.SubscriptionStatus.valueOf("ACTIVE"));
+        subs.setStatus(Subscription.SubscriptionStatus.valueOf("PASSIVE"));
         subsRepo.save(subs);
         return true;
     }

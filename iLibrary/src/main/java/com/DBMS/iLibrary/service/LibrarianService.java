@@ -17,6 +17,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.DBMS.iLibrary.entity.Booking.BookingStatus.*;
+
 @Service
 public class LibrarianService {
     @Value("${app.jwtSecret}")
@@ -61,8 +63,12 @@ public class LibrarianService {
         }
         int bookedHours = booking.getHrs();  // original duration requested
         LocalDateTime now = LocalDateTime.now();
-        if(!booking.getPaymentDone())
-            return "Payment Has not yet done.";
+        if(booking.getStatus().equals(PENDING))
+            return "Payment has not yet done.";
+        if(booking.getStatus().equals(CANCELLED))
+            return "Payment has been cancelled.";
+        if(booking.getStatus().equals(FAILED))
+            return "Payment has been failed.";
         booking.setStatus(Booking.BookingStatus.CONFIRMED);
         booking.setStartTime(now);
 

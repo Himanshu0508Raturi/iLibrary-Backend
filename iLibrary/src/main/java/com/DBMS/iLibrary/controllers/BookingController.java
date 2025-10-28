@@ -29,7 +29,7 @@ public class BookingController {
     private MailService mailService;
     @Autowired
     private BookingRepo bookingRepo;
-    // Books a seat for a logged in user in booking table : Request Body : seatdto.
+    // Books a seat for a logged-in user in booking table : Request Body : seatdto.
     // Transactional bookseat() method().
     // Mail service Involved.
 //    @CachePut(key = "abc")
@@ -41,9 +41,6 @@ public class BookingController {
         }
         User user = opUser.get();
         try {
-//            if(seatdto.getIsMongoEnabled() == Boolean.TRUE){
-//                //mongo flow
-//            }
             bookingService.bookSeat(seatdto, user, secretKey);
             return new ResponseEntity<>("Seat No " + seatdto.getSeatNumber() + " booked Successfully", HttpStatus.OK);
         } catch (IllegalArgumentException | IllegalStateException ex) {
@@ -52,7 +49,7 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Runtime Exception occurred in booking controller");
         }
     }
-    // cancel a seat for a loggin in user in booking table .Table data wouldn't be deleted only status set to CANCEL in booking
+    // cancel a seat for a login in user in booking table .Table data wouldn't be deleted only status set to CANCEL in booking
     // table for history purpose , also seat status is set to AVAILABLE in seat table.
     // mail service involved
     //Transactional cancelBooking() method
