@@ -1,8 +1,10 @@
 package com.DBMS.iLibrary.service;
 
 import com.DBMS.iLibrary.entity.Booking;
+import com.DBMS.iLibrary.entity.Subscription;
 import com.DBMS.iLibrary.entity.User;
 import com.DBMS.iLibrary.repository.BookingRepo;
+import com.DBMS.iLibrary.repository.SubscriptionRepo;
 import com.DBMS.iLibrary.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,13 +24,14 @@ public class UserService {
     @Autowired
     private BookingRepo bookingRepo;
 
+    @Autowired
+    private SubscriptionRepo subscriptionRepo;
+
     private static final PasswordEncoder passwordencoder = new BCryptPasswordEncoder();
 
     @Transactional
-    public RuntimeException saveUser(User user , Set<String> role)
-    {
-        try
-        {
+    public RuntimeException saveUser(User user, Set<String> role) {
+        try {
             user.setPassword(passwordencoder.encode(user.getPassword()));
             user.setCreatedAt(new Date());
             user.setRoles(role);
@@ -46,6 +49,7 @@ public class UserService {
     public void deleteById(Long id) {
         userRepository.deleteById(id);
     }
+
     /* public boolean isValidEmail(String email) {
         if (email == null || email.isEmpty()) {
             return false;
@@ -61,14 +65,31 @@ public class UserService {
         String usernameRegex = "^[A-Za-z][A-Za-z0-9_]{5,29}$";
         return username.matches(usernameRegex);
     } Used @Valid instead this. */
-    public void changeUserName(User user , String newUsername)
-    {
+    public void changeUserName(User user, String newUsername) {
         user.setUsername(newUsername);
         userRepository.save(user);
     }
 
-    public List<Booking> getUserBookingHistory(User user)
-    {
+    public List<Booking> getUserBookingHistory(User user) {
         return bookingRepo.findAllById(Collections.singleton(user.getId()));
+    }
+
+    public Subscription getActiveSubscriptionOfUser(User user) {
+        Optional<Subscription> OpSubscription = subscriptionRepo.findByUserAndStatus(user, Subscription.SubscriptionStatus.valueOf("ACTIVE"));
+        if (OpSubscription.isEmpty()) {
+            throw new RuntimeException("No Subscription found for user: "+ user.getUsername());
+        }
+        return OpSubscription.get();
+    }
+    public List<Subscription> getAllSubscriptionOfUser(User user) {
+        List<Subscription> allSubscription = subscriptionRepo.findAllByUser(user);
+        if (allSubscription.isEmpty()) {
+            throw new RuntimeException("No Subscription found for user: "+ user.getUsername());
+        }
+        return allSubscription;
+    }
+    public void deleteAUser(User user)
+    {
+        userRepository.delete(user);
     }
 }

@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+//import static com.DBMS.iLibrary.entity.Booking.BookingStatus.PENDING;
 import static com.DBMS.iLibrary.entity.SeatPayment.PaymentStatus.PENDING;
-
 @Service
 public class SeatPaymentService {
     @Autowired
@@ -52,6 +52,13 @@ public class SeatPaymentService {
             SeatPayment seatPayment = opPayment.get();
             seatPayment.setStatus(SeatPayment.PaymentStatus.COMPLETED); // or CONFIRMED
             seatPaymentRepository.save(seatPayment);
+
+            //marking isPaymentDone field in booking to 1 (Done).
+            User user = seatPayment.getUser();
+            List<Booking> allBooking = bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.valueOf("PENDING"));
+            Booking booking = allBooking.get(allBooking.size() -1);
+            booking.setIsPaymentDone(1);
+            bookingRepo.save(booking);
         } else {
             // Optionally handle error/throw/log if no matching record is found
             System.err.println("No SeatPayment found with sessionId: " + sessionId);

@@ -49,7 +49,9 @@ public class LibrarianService {
             throw new IllegalArgumentException("Booking not found");
         }
         Booking booking = bookingOpt.get();
-
+        if (booking.getIsPaymentDone() == 0) {
+            return "Payment has not been done yet";
+        }
         if (!booking.getStatus().toString().equals(status)) {
             throw new IllegalStateException("Booking status mismatch");
         }
@@ -57,17 +59,11 @@ public class LibrarianService {
         if (LocalDateTime.now().isAfter(endTime)) {
             throw new IllegalStateException("Booking expired");
         }
-        //1
-        if (LocalDateTime.now().isAfter(endTime)) {
-            throw new IllegalStateException("Booking expired");
-        }
         int bookedHours = booking.getHrs();  // original duration requested
         LocalDateTime now = LocalDateTime.now();
-        if(booking.getStatus().equals(PENDING))
-            return "Payment has not yet done.";
-        if(booking.getStatus().equals(CANCELLED))
+        if (booking.getStatus().equals(CANCELLED))
             return "Payment has been cancelled.";
-        if(booking.getStatus().equals(FAILED))
+        if (booking.getStatus().equals(FAILED))
             return "Payment has been failed.";
         booking.setStatus(Booking.BookingStatus.CONFIRMED);
         booking.setStartTime(now);

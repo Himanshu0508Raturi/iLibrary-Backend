@@ -26,13 +26,15 @@ public class Subscription {
     public enum SubscriptionType {
         WEEKLY, MONTHLY, YEARLY
     }
+
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Subscription type shouldn't be null")
     private SubscriptionType type;
 
     public enum SubscriptionStatus {
-        ACTIVE, PASSIVE
+        ACTIVE, PASSIVE, EXPIRED
     }
+
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus status;
     private BigDecimal amount;

@@ -1,6 +1,7 @@
 package com.DBMS.iLibrary.controllers;
 
 import com.DBMS.iLibrary.entity.Booking;
+import com.DBMS.iLibrary.entity.Subscription;
 import com.DBMS.iLibrary.entity.User;
 import com.DBMS.iLibrary.entity.Userdto;
 import com.DBMS.iLibrary.service.UserService;
@@ -45,5 +46,41 @@ public class UserController {
         }
         List<Booking> all = userService.getUserBookingHistory(OpUser.get());
         return new ResponseEntity<>(all, HttpStatus.OK);
+    }
+
+    //subscription of logged - in user
+    @GetMapping("/activeSubscription")
+    public ResponseEntity<?> getUserSubscription() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userService.findByUsername(username).get();
+        Subscription subscription = new Subscription();
+        try {
+            subscription = userService.getActiveSubscriptionOfUser(user);
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
+        return new ResponseEntity<>(subscription, HttpStatus.OK);
+    }
+
+    // get all subscription of a user.
+    @GetMapping("/allSubscription")
+    public ResponseEntity<?> getAllUserSubscription() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userService.findByUsername(username).get();
+        List<Subscription> allSubscription = null;
+        try {
+            allSubscription = userService.getAllSubscriptionOfUser(user);
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
+        return new ResponseEntity<>(allSubscription, HttpStatus.OK);
+    }
+
+    @DeleteMapping("deleteUser")
+    public ResponseEntity<?> deleteAUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userService.findByUsername(username).get();
+        userService.deleteAUser(user);
+        return new ResponseEntity<>("User with username: " + username + " deleted Successfully", HttpStatus.OK);
     }
 }

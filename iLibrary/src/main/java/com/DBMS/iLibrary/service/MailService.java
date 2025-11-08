@@ -477,7 +477,7 @@ public class MailService {
     }
 
     @Async
-        public void     sendSubscriptionPaymentConformMail(Event event) throws MessagingException {
+    public void sendSubscriptionPaymentConformMail(Event event) throws MessagingException {
         // Deserialize Stripe event data safely
         EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
         Session session = (Session) deserializer.getObject()
@@ -500,9 +500,10 @@ public class MailService {
                 """.formatted(user.getUsername(), session.getAmountTotal() / 100.0, session.getId());
         helper.setSubject("Subscription Payment Successful");
         helper.setTo(user.getEmail());
-        helper.setText(body,true);
+        helper.setText(body, true);
         mailSender.send(message);
     }
+
     @Async
     public void sendSubscriptionPaymentCancelMail(Event event) throws MessagingException {
         EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
@@ -532,5 +533,75 @@ public class MailService {
         helper.setText(body, true);
 
         mailSender.send(message);
+    }
+
+    @Async
+    public void sendSeatExpiryMail(Booking booking) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        String username = booking.getUser().getUsername();
+        String seatNumber = booking.getSeat().getSeatNumber();
+        String startTime = booking.getStartTime().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy"));
+        String endTime = booking.getEndTime().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy"));
+        String subject = "Your seat booking has ended";
+        String body = """
+                Hi %s,
+                
+                We hope you had a productive time at iLibrary.
+                
+                This is to inform you that your seat booking (Seat No. %s)\s
+                from %s to %s has now ended.
+                
+                The seat has been automatically released and is now available for new bookings.
+                
+                If you’d like to continue using the same seat,\s
+                please make a new booking through your iLibrary dashboard.
+                
+                Thank you for using iLibrary!
+                Keep learning and exploring. 📚
+                
+                Warm regards,
+                Team iLibrary
+                """.formatted(username, seatNumber, startTime, endTime);
+        helper.setTo(booking.getUser().getEmail());
+        helper.setSubject(subject);
+        helper.setText(body, true);
+        mailSender.send(message);
+    }
+
+    @Async
+    public void sendSubscriptionExpiryMail(Subscription subscription) throws MessagingException{
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message,true);
+
+        String username = subscription.getUser().getUsername();
+        String planType = String.valueOf(subscription.getType());
+        String expiryDate = subscription.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy"));
+
+        String subject = "Your iLibrary Subscription Has Expired — Renew to Stay Connected!";
+        String body = """
+                Hi %s,
+                
+                We wanted to let you know that your iLibrary subscription\s
+                Plan: %s has expired on %s.
+                
+                To continue accessing premium features like online seat booking,
+                digital resources, and priority support, please renew your subscription today.
+                
+                You can renew easily by visiting your account’s Subscription page or by clicking the link below:
+                {{renewalLink}}
+                
+                We appreciate your continued support of iLibrary.\s
+                Stay connected to knowledge and community learning!
+                
+                Best regards,
+                Team iLibrary
+                """.formatted(username,planType,expiryDate);
+
+        helper.setTo(subscription.getUser().getEmail());
+        helper.setSubject(subject);
+        helper.setText(body,true);
+        mailSender.send(message)    ;
     }
 }

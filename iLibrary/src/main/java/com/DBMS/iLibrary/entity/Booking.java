@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,11 +31,14 @@ public class Booking {
         PENDING,     // Booking has been requested but not yet confirmed
         CONFIRMED,   // Booking is approved and valid
         CANCELLED,   // Booking was canceled by user or admin
-        FAILED       // Booking failed (e.g., payment failed, seat unavailable)
+        FAILED,       // Booking failed (e.g., payment failed, seat unavailable)
+        EXPIRED       // After booking time has completed , changes by scheduler.
     }
+
 
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
     private int hrs;
     private double amount;
+    private int isPaymentDone; //1 -> paymentDone , 0 -> not done yet
 }
