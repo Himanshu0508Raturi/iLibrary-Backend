@@ -9,5 +9,7 @@ import java.util.Optional;
 public interface SeatPaymentRepository extends JpaRepository<SeatPayment,Long> {
     Optional<SeatPayment> findBySessionId(String sessionId);
     List<SeatPayment> findAllByUserId(Long userId);
+
+    void deleteByUserId(Long id);
     //Optional<SeatPayment> findByUserId(Long id);
 }

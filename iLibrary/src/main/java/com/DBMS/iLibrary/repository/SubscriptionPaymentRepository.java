@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface SubscriptionPaymentRepository extends JpaRepository<SubscriptionPayment,Long> {
     Optional<SubscriptionPayment> findBySessionId(String sessionId);
     List<SubscriptionPayment> findAllByUserId(Long userId);
+
+    void deleteByUserId(Long id);
 }

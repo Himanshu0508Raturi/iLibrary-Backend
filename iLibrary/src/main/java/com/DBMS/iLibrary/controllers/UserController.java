@@ -23,20 +23,6 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/changeUsername/{newUserName}")
-    public ResponseEntity<?> changeUsername(@RequestBody Userdto userdto, @PathVariable String newUserName) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<User> optionalOldUser = userService.findByUsername(userdto.getUsername());
-        if (optionalOldUser.isEmpty()) {
-            return new ResponseEntity<>("User with username : " + userdto.getUsername() + " not found.", HttpStatus.NO_CONTENT);
-        }
-        User oldUser = optionalOldUser.get();
-        if (newUserName.isEmpty())
-            return new ResponseEntity<>("New User Name can't be blank.", HttpStatus.BAD_REQUEST);
-        userService.changeUserName(oldUser, newUserName);
-        return new ResponseEntity<>("User Name Changed Successfully. New User name: " + newUserName, HttpStatus.BAD_REQUEST);
-    }
-
     @GetMapping("/bookingHistory")
     public ResponseEntity<?> getUserBookingHistory() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -76,11 +62,15 @@ public class UserController {
         return new ResponseEntity<>(allSubscription, HttpStatus.OK);
     }
 
-    @DeleteMapping("deleteUser")
+    @DeleteMapping("/deleteUser")
     public ResponseEntity<?> deleteAUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userService.findByUsername(username).get();
-        userService.deleteAUser(user);
+        try {
+            userService.deleteAUser(user);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
         return new ResponseEntity<>("User with username: " + username + " deleted Successfully", HttpStatus.OK);
     }
 }

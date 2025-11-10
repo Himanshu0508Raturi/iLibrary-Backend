@@ -43,15 +43,17 @@ public class PriceCheckoutController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
         User user = opUser.get();
+        Booking booking = new Booking();
         // 2. Find pending booking
         List<Booking> bookings = bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.PENDING);
-        if (bookings.size() > 1) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Multiple pending bookings found for user: " + user.getUsername());
-        } else if (bookings.isEmpty()) {
+        if (!bookings.isEmpty()) {
+            booking = bookings.get(bookings.size() - 1);
+//            return ResponseEntity.status(HttpStatus.CONFLICT).body("Multiple pending bookings found for user: " + user.getUsername());
+        } else  {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No pending booking found for user: " + user.getUsername());
         }
 
-        Booking booking = bookings.get(0);
+//        Booking booking = bookings.get(0);
 
         // 3 Create payment request
         double basePrice = 50.00;

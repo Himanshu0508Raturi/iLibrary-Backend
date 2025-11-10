@@ -17,4 +17,6 @@ public interface SubscriptionRepo extends JpaRepository<Subscription, Long> {
     void deleteByEndDateBefore(LocalDate cutoff);
 
     List<Subscription> findAllByUser(User user);
+
+    void deleteByUserId(Long id);
 }

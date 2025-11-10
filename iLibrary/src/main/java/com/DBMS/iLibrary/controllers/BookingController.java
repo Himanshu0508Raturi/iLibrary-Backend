@@ -13,7 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import static com.DBMS.iLibrary.entity.Booking.BookingStatus.PENDING;
 
 @RestController
 @RequestMapping("/booking")
@@ -54,28 +58,43 @@ public class BookingController {
     // mail service involved
     //Transactional cancelBooking() method
 //    @CacheEvict()
-    @DeleteMapping("/cancel/{bookingId}")
-    public ResponseEntity<?> cancelABooking(@Valid @PathVariable Long bookingId) {
-        Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+    @DeleteMapping("/cancel")
+    public ResponseEntity<?> cancelABooking() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<User> opUser = userService.findByUsername(username);
+
         if (opUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
+
         User user = opUser.get();
-        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
-        if (bookingOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found");
+
+        // Fetch all bookings for this user with status CONFIRMED or PENDING
+        List<Booking> userBookings = new ArrayList<>();
+        userBookings.addAll(bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.CONFIRMED));
+        userBookings.addAll(bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.PENDING));
+
+        if (userBookings.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active (CONFIRMED or PENDING) bookings found to cancel.");
         }
-        Booking booking = bookingOpt.get();
+
+        // Get the most recent booking (last one)
+        Booking bookingToCancel = userBookings.get(userBookings.size() - 1);
+        Long bookingId = bookingToCancel.getId();
+
         try {
             bookingService.cancelBooking(bookingId, user);
-            mailService.sendCancellationMail(user, booking);
-            return ResponseEntity.ok("Booking canceled Successfully");
+            mailService.sendCancellationMail(user, bookingToCancel);
+            return ResponseEntity.ok("Booking cancelled successfully.");
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         } catch (IllegalStateException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Runtime Exception occurred in cancel controller");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred while cancelling booking.");
         }
     }
+
 }
+

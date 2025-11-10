@@ -12,9 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -54,15 +57,6 @@ public class PublicController {
         Set<String> prefixedRoles = roles.stream()
                 .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
                 .collect(Collectors.toSet());
-//        boolean isMailValid = userService.isValidEmail(user.getEmail());
-//        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
-//        if (!isMailValid) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
-//        }
-//
-//        if (!isUserNameValid) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
-//        } replaced by @Valid annotation.
         try {
             userService.saveUser(user, prefixedRoles); // Save user first.
             mailService.sendSignupMail(user); // Then send otp mail
@@ -76,22 +70,30 @@ public class PublicController {
     }
 
     // add user to Spring Security Context Holder simply means logged in user and send a token as a response
+    // DTO for response
+    public record AuthResponse(String token, List<String> roles) {}
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {
-        /*boolean isMailValid = userService.isValidEmail(user.getEmail());
-        boolean isUserNameValid = userService.isValidUsername(user.getUsername());
-        if (!isMailValid) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid email.");
-        }
-        if (!isUserNameValid) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Enter a valid username.");
-        } */
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
-            String token = jwtUtil.generateToken(user.getUsername());
-            return ResponseEntity.ok().body(token);
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+            );
+
+            // get roles from the authenticated principal (works with UserDetails)
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            List<String> roles = authorities.stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+
+            // generate token with roles claim
+            String token = jwtUtil.generateToken(user.getUsername(), roles);
+
+            // return token and roles
+            return ResponseEntity.ok(new AuthResponse(token, roles));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
+
 }

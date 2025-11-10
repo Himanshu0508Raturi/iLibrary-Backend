@@ -1,33 +1,121 @@
-# iLibrary-Backend
+# iLibrary Backend API Documentation
 
-JAVA 
+This document provides a comprehensive overview of all backend APIs for the iLibrary project.
 
-java 8  - complete  
-Internal Working - hasmap , hashset array list , limkedlisyt , concurrent hashmap , synchronized hashmap
-Exceptional handling
+## Base URL
+```
+http://localhost:8080
+```
 
-SpringBoot - Global Exceptional handling
+## Authentication
+JWT Bearer Token Authorization.
 
-Microservices basic
+### Example Header
+```
+Authorization: Bearer <token>
+```
 
-what to add
-renewal link in scheduler -> subscription expiry mail service.
-live payment successful , cancelled link to spring boot + home page in that embedded.
-Enhance mail service.
-2. Usage Analytics / Report Generator Scheduler
+---
 
-Purpose:
-Generate daily/weekly summaries:
+## 📘 Public APIs
+| Method | Endpoint | Description |
+|--------|-----------|--------------|
+| POST | `/public/signup` | Register a new user |
+| POST | `/public/login` | Authenticate and receive JWT token |
+| GET | `/public/healthCheck` | Check API health |
 
-Total seats booked today
+---
 
-Active vs. expired subscriptions
+## 🎫 Booking APIs
+| Method | Endpoint | Description |
+|--------|-----------|--------------|
+| POST | `/booking/seat` | Book a seat |
+| DELETE | `/booking/cancel/{bookingId}` | Cancel a booking |
 
-Revenue summary from Stripe payments
+---
 
-Output:
-Stored in DB or emailed to admin.
+## 💳 Subscription APIs
+| Method | Endpoint | Description |
+|--------|-----------|--------------|
+| POST | `/subscription/buy` | Purchase a subscription |
+| PUT | `/subscription/renew` | Renew a subscription |
+| PUT | `/subscription/cancel` | Cancel subscription |
+| GET | `/subscription/status` | Check current subscription status |
 
-Fixed Rate: Every 24 hours (midnight job).
+---
 
-aiven mysql database -> free mysql db (signup using iLibrary)
+## 🧑‍💼 Admin APIs
+| Method | Endpoint | Description |
+|--------|-----------|--------------|
+| GET | `/admin/allUsers` | List all users |
+| GET | `/admin/allSeats` | List all seats |
+| GET | `/admin/allBooking` | List all bookings |
+| GET | `/admin/allSubscription` | List all subscriptions |
+
+---
+
+## 💰 Price & Payment APIs
+| Method | Endpoint | Description |
+|--------|-----------|--------------|
+| GET | `/payment/seat` | Seat payment checkout |
+| GET | `/payment/subscription` | Subscription payment checkout |
+
+---
+
+## ⚙️ Stripe Webhook APIs
+| Method | Endpoint | Description |
+|--------|-----------|--------------|
+| POST | `/webhook/subscription` | Handle subscription webhook |
+| POST | `/webhook/seat` | Handle seat booking webhook |
+
+---
+
+## 📚 Example API Usage
+### Signup
+```bash
+curl -X POST http://localhost:8080/public/signup -H "Content-Type: application/json" -d '{"username":"john","password":"12345","email":"john@gmail.com"}'
+```
+
+### Login
+```bash
+curl -X POST http://localhost:8080/public/login -H "Content-Type: application/json" -d '{"username":"john","password":"12345"}'
+```
+
+### Book a Seat
+```bash
+curl -X POST http://localhost:8080/booking/seat -H "Authorization: Bearer <JWT>" -H "Content-Type: application/json" -d '{"seatNumber":"A12","hours":2}'
+```
+
+---
+
+## 🧩 Data Schemas
+
+### User
+```json
+{
+  "username": "string",
+  "password": "string",
+  "email": "string",
+  "roles": ["ROLE_USER"]
+}
+```
+
+### Subscription
+```json
+{
+  "type": "WEEKLY | MONTHLY | YEARLY"
+}
+```
+
+### SeatDTO
+```json
+{
+  "seatNumber": "string",
+  "hours": "integer"
+}
+```
+
+---
+
+## 🧪 Postman Collection
+A ready-to-import Postman JSON collection can be generated automatically using this OpenAPI definition.

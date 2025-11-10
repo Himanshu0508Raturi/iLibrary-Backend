@@ -3,9 +3,7 @@ package com.DBMS.iLibrary.service;
 import com.DBMS.iLibrary.entity.Booking;
 import com.DBMS.iLibrary.entity.Subscription;
 import com.DBMS.iLibrary.entity.User;
-import com.DBMS.iLibrary.repository.BookingRepo;
-import com.DBMS.iLibrary.repository.SubscriptionRepo;
-import com.DBMS.iLibrary.repository.UserRepository;
+import com.DBMS.iLibrary.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,9 +24,12 @@ public class UserService {
 
     @Autowired
     private SubscriptionRepo subscriptionRepo;
+    @Autowired
+    private SeatPaymentRepository seatPaymentRepository;
+    @Autowired
+    private SubscriptionPaymentRepository subscriptionPaymentRepository;
 
     private static final PasswordEncoder passwordencoder = new BCryptPasswordEncoder();
-
     @Transactional
     public RuntimeException saveUser(User user, Set<String> role) {
         try {
@@ -65,13 +66,9 @@ public class UserService {
         String usernameRegex = "^[A-Za-z][A-Za-z0-9_]{5,29}$";
         return username.matches(usernameRegex);
     } Used @Valid instead this. */
-    public void changeUserName(User user, String newUsername) {
-        user.setUsername(newUsername);
-        userRepository.save(user);
-    }
 
     public List<Booking> getUserBookingHistory(User user) {
-        return bookingRepo.findAllById(Collections.singleton(user.getId()));
+        return bookingRepo.findAllByUserId(user.getId());
     }
 
     public Subscription getActiveSubscriptionOfUser(User user) {
@@ -88,8 +85,14 @@ public class UserService {
         }
         return allSubscription;
     }
+    @Transactional
     public void deleteAUser(User user)
     {
+
+        bookingRepo.deleteByUserId(user.getId());
+        seatPaymentRepository.deleteByUserId(user.getId());
+        subscriptionPaymentRepository.deleteByUserId(user.getId());
+        subscriptionRepo.deleteByUserId(user.getId());
         userRepository.delete(user);
     }
 }

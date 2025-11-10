@@ -53,8 +53,8 @@ public class StripePaymentService {
             // Build checkout session
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl("http://localhost:8080/success.html")
-                    .setCancelUrl("http://localhost:8080/cancel.html")
+                    .setSuccessUrl("https://dbms-frontend-two.vercel.app/success.html")
+                    .setCancelUrl("https://dbms-frontend-two.vercel.app/cancel.html")
                     .addLineItem(lineItem)
                     .putMetadata("userId",user.getId().toString())
                     .putMetadata("username", user.getUsername())
