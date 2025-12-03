@@ -6,7 +6,6 @@ import com.DBMS.iLibrary.repository.SubscriptionRepo;
 import com.DBMS.iLibrary.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -19,12 +18,6 @@ public class SubscriptionService {
     @Autowired
     private UserRepository userRepository;
 
-    public Long findById(String userName)
-    {
-        Optional<User> user = userRepository.findByUsername(userName);
-
-        return user.map(User::getId).orElse(null);
-    }
 
     public boolean saveNewSubs(Subscription subs)
     {

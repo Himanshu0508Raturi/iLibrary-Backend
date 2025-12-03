@@ -26,3 +26,12 @@ EXPOSE 8080
 ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0"
 
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -Dserver.port=${PORT:-8080} -jar /app/app.jar"]
+#FROM eclipse-temurin:17-jdk
+#
+#WORKDIR /app
+#
+#COPY target/iLibrary-0.0.1-SNAPSHOT.jar /app/iLibrary-0.0.1-SNAPSHOT.jar
+#
+#EXPOSE 8080
+#
+#ENTRYPOINT ["java","-jar","iLibrary-0.0.1-SNAPSHOT.jar"]

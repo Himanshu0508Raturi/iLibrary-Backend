@@ -22,6 +22,7 @@ public class Seat {
         BOOKED,
         UNDER_MAINTENANCE
     }
+
     @Enumerated(EnumType.STRING)
     private SeatStatus status = SeatStatus.AVAILABLE; // Enum for seat status
 }

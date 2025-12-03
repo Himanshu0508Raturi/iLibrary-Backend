@@ -7,7 +7,6 @@ import com.DBMS.iLibrary.service.SeatPaymentService;
 import com.DBMS.iLibrary.service.StripePaymentService;
 import com.DBMS.iLibrary.service.UserService;
 import com.DBMS.iLibrary.service.subscriptionPaymentService;
-import org.hibernate.NonUniqueResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +48,7 @@ public class PriceCheckoutController {
         if (!bookings.isEmpty()) {
             booking = bookings.get(bookings.size() - 1);
 //            return ResponseEntity.status(HttpStatus.CONFLICT).body("Multiple pending bookings found for user: " + user.getUsername());
-        } else  {
+        } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No pending booking found for user: " + user.getUsername());
         }
 
@@ -58,8 +57,8 @@ public class PriceCheckoutController {
         // 3 Create payment request
         double basePrice = 50.00;
         double totalAmount = 50.00 * booking.getHrs();
-        double gstPerPerson = (totalAmount * 0.18)/booking.getHrs();
-        double amtToSet = basePrice+ gstPerPerson;
+        double gstPerPerson = (totalAmount * 0.18) / booking.getHrs();
+        double amtToSet = basePrice + gstPerPerson;
         PaymentRequest paymentRequest = new PaymentRequest();
         paymentRequest.setName("Seat Payment");
         paymentRequest.setCurrency("INR");
@@ -79,10 +78,9 @@ public class PriceCheckoutController {
                 .body(stripeResponse);
     }
 
-//    // for subscription controller
+    //    // for subscription controller
     @GetMapping("/subscription")
-    public ResponseEntity<?> subscriptionPaymentCheckout()
-    {
+    public ResponseEntity<?> subscriptionPaymentCheckout() {
         // 1. Validate authentication and find user
         Optional<User> opUser = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
         if (opUser.isEmpty()) {
@@ -91,9 +89,8 @@ public class PriceCheckoutController {
         User user = opUser.get();
         // 2. Find PASSIVE subscription
         List<Subscription> allSubscription = subscriptionRepo.findAllByUserAndStatus(user, Subscription.SubscriptionStatus.PASSIVE);
-        if(allSubscription.isEmpty())
-        {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No subscription found for user: "+user.getUsername()+".");
+        if (allSubscription.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No subscription found for user: " + user.getUsername() + ".");
         }
         Subscription subscription = allSubscription.get(allSubscription.size() - 1);
 
@@ -106,7 +103,7 @@ public class PriceCheckoutController {
         // 4. Call Stripe service
         StripeResponse stripeResponse = stripePaymentService.checkoutProducts(paymentRequest, user);
         //calling subscriptionPaymentService.saveDataBeforePayment() so that data was saved in db.
-        try{
+        try {
             subscriptionPaymentService.saveDataBeforePayment(subscription, stripeResponse.getSessionId());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("RuntimeError while saving entries to SeatPayment table.");

@@ -13,12 +13,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -69,9 +67,10 @@ public class PublicController {
 
     }
 
-    // add user to Spring Security Context Holder simply means logged in user and send a token as a response
+    // add user to Spring Security Context Holder simply means logged-in user and send a token as a response
     // DTO for response
-    public record AuthResponse(String token, List<String> roles) {}
+    public record AuthResponse(String token, List<String> roles) {
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {

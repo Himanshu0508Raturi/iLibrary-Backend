@@ -1,7 +1,6 @@
 package com.DBMS.iLibrary.service;
 
 import com.DBMS.iLibrary.entity.Booking;
-import com.DBMS.iLibrary.entity.QrTokendto;
 import com.DBMS.iLibrary.entity.User;
 import com.DBMS.iLibrary.repository.BookingRepo;
 import io.jsonwebtoken.Claims;
@@ -12,7 +11,6 @@ import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -27,8 +25,6 @@ public class LibrarianService {
     private BookingRepo bookingRepo;
     @Autowired
     private MailService mailService;
-    @Autowired
-    private UserService userService;
 
 
     public String verifyQrToken(String qrToken) {
@@ -42,8 +38,6 @@ public class LibrarianService {
         Long bookingId = Long.valueOf(claims.get("bookingId").toString());
         String seatNumber = claims.get("seatNumber").toString();
         String status = claims.get("status").toString();
-        String endTimeStr = claims.get("endTime").toString();
-
         Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
         if (bookingOpt.isEmpty()) {
             throw new IllegalArgumentException("Booking not found");

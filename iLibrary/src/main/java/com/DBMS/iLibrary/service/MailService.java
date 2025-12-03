@@ -29,7 +29,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.stripe.model.checkout.Session;
-
 import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -56,7 +55,6 @@ public class MailService {
         long minutes = duration.toMinutes() % 60;
         String time = "Time: " + hours + " hours " + minutes + " minutes";
         //Date Formatter.
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
         String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
         User user = booking.getUser();
         MimeMessage message = mailSender.createMimeMessage();
@@ -93,7 +91,6 @@ public class MailService {
     public void sendPaymentConformMail(Event event) throws MessagingException {
         EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
         Session session = (Session) deserializer.getObject().get();
-        String userId = session.getMetadata().get("userId");
         String username = session.getMetadata().get("username");
         User user = userService.findByUsername(username).get();
         List<Booking> allBookings = bookingRepo.findAllByUserIdAndStatus(user.getId(), Booking.BookingStatus.PENDING);
@@ -119,7 +116,6 @@ public class MailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo(user.getEmail());
         helper.setSubject("Seat Payment Successful");
-        String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
         helper.setText(
                 "Dear " + user.getUsername() + ",\n\n" +
                         "We are pleased to confirm that your payment has been successfully processed. Your transaction is complete, please verify the earlier received QR at entrance to our librarian and officially confirmed your seat.\n" +
@@ -288,7 +284,6 @@ public class MailService {
 
     @Async
     public void sendConformationMail(User user, Booking booking) throws MessagingException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
         String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
         //Time Formatter
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
@@ -328,7 +323,6 @@ public class MailService {
 
     @Async
     public void sendCancellationMail(User user, Booking booking) throws MessagingException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
         String bookingDate = booking.getBookingDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
         //Time Formatter
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
@@ -390,7 +384,6 @@ public class MailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
         String endDate = subs.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
         String startDate = subs.getStartDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
 
@@ -420,7 +413,6 @@ public class MailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
         String endDate = subscription.getEndDate().format(DateTimeFormatter.ofPattern("MMMM dd,yyyy"));
 
         helper.setTo(user.getEmail());

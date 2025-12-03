@@ -9,9 +9,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -47,9 +44,6 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    public void deleteById(Long id) {
-        userRepository.deleteById(id);
-    }
 
     /* public boolean isValidEmail(String email) {
         if (email == null || email.isEmpty()) {
@@ -88,7 +82,6 @@ public class UserService {
     @Transactional
     public void deleteAUser(User user)
     {
-
         bookingRepo.deleteByUserId(user.getId());
         seatPaymentRepository.deleteByUserId(user.getId());
         subscriptionPaymentRepository.deleteByUserId(user.getId());

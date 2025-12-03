@@ -8,7 +8,6 @@ import com.DBMS.iLibrary.repository.BookingRepo;
 import com.DBMS.iLibrary.repository.SeatRepo;
 import com.DBMS.iLibrary.repository.SubscriptionRepo;
 import com.DBMS.iLibrary.repository.UserRepository;
-import com.DBMS.iLibrary.service.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +41,7 @@ public class AdminController {
         }
         return new ResponseEntity<>("No Active Subscription for any user.", HttpStatus.NO_CONTENT);
     }
+
     // Return all Bookings from booking table.
     @GetMapping("/allBooking")
     public ResponseEntity<?> getAllBooking() {
@@ -51,6 +51,7 @@ public class AdminController {
         }
         return new ResponseEntity<>("No Active Booking for any user.", HttpStatus.NO_CONTENT);
     }
+
     // Return all Seats from seats table.
     @GetMapping("/allSeats")
     public ResponseEntity<?> getAllSeats() {
@@ -60,6 +61,7 @@ public class AdminController {
         }
         return new ResponseEntity<>("No Seats in DB.", HttpStatus.NO_CONTENT);
     }
+
     // Return all Users from User table.
     @GetMapping("/allUsers")
     public ResponseEntity<?> getAllUsers() {

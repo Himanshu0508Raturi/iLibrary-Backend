@@ -1,6 +1,5 @@
 package com.DBMS.iLibrary.config;
 
-import com.DBMS.iLibrary.service.UserDetailsServiceImpl;
 import com.DBMS.iLibrary.utilities.JwtUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,8 +26,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private UserDetailsServiceImpl userDetailsService; // optional fallback
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override

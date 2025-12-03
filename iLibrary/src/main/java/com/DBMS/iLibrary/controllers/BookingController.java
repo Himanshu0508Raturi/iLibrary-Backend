@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.DBMS.iLibrary.entity.Booking.BookingStatus.PENDING;
 
 @RestController
 @RequestMapping("/booking")
@@ -33,8 +32,9 @@ public class BookingController {
     private MailService mailService;
     @Autowired
     private BookingRepo bookingRepo;
+
     // Books a seat for a logged-in user in booking table : Request Body : seatdto.
-    // Transactional bookseat() method().
+    // Transactional bookSeat() method().
     // Mail service Involved.
 //    @CachePut(key = "abc")
     @PostMapping("/seat")
@@ -53,6 +53,7 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Runtime Exception occurred in booking controller");
         }
     }
+
     // cancel a seat for a login in user in booking table .Table data wouldn't be deleted only status set to CANCEL in booking
     // table for history purpose , also seat status is set to AVAILABLE in seat table.
     // mail service involved

@@ -3,21 +3,17 @@ package com.DBMS.iLibrary.service;
 import com.DBMS.iLibrary.entity.Booking;
 import com.DBMS.iLibrary.entity.Seat;
 import com.DBMS.iLibrary.entity.Subscription;
-import com.DBMS.iLibrary.entity.SubscriptionPayment;
 import com.DBMS.iLibrary.repository.BookingRepo;
 import com.DBMS.iLibrary.repository.SeatRepo;
 import com.DBMS.iLibrary.repository.SubscriptionRepo;
-import io.lettuce.core.output.JsonTypeListOutput;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-
 import static com.DBMS.iLibrary.entity.Subscription.SubscriptionStatus.EXPIRED;
 
 @Service
@@ -25,10 +21,8 @@ public class SchedulerService {
 
     @Autowired
     private BookingRepo bookingRepo;
-
     @Autowired
     private MailService mailService;
-
     @Autowired
     private SeatRepo seatRepo;
     @Autowired

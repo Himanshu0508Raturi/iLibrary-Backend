@@ -8,20 +8,17 @@ import com.DBMS.iLibrary.repository.SeatPaymentRepository;
 import com.stripe.model.checkout.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
-//import static com.DBMS.iLibrary.entity.Booking.BookingStatus.PENDING;
 import static com.DBMS.iLibrary.entity.SeatPayment.PaymentStatus.PENDING;
+
+
 @Service
 public class SeatPaymentService {
     @Autowired
     private SeatPaymentRepository seatPaymentRepository;
-    @Autowired
-    private UserService userService;
     @Autowired
     private BookingRepo bookingRepo;
 

@@ -5,7 +5,6 @@ import com.DBMS.iLibrary.repository.SeatRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.management.Query;
 
 @Service
 public class SeatService {

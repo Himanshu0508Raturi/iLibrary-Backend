@@ -4,7 +4,6 @@ import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service

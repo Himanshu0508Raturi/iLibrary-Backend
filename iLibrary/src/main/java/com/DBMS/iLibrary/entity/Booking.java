@@ -3,7 +3,6 @@ package com.DBMS.iLibrary.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,6 +26,7 @@ public class Booking {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+
     public enum BookingStatus {
         PENDING,     // Booking has been requested but not yet confirmed
         CONFIRMED,   // Booking is approved and valid
