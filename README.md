@@ -119,3 +119,5 @@ curl -X POST http://localhost:8080/booking/seat -H "Authorization: Bearer <JWT>"
 
 ## 🧪 Postman Collection
 A ready-to-import Postman JSON collection can be generated automatically using this OpenAPI definition.
+
+## Developed By- Himanshu Raturi [![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-blue?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/himanshu-raturi/)
