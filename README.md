@@ -19,7 +19,103 @@
 ## 📋 Overview
 
 iLibrary Backend is a comprehensive RESTful API service designed for managing private study libraries. It provides a complete solution for user management, subscription handling, seat booking with real-time availability tracking, QR-based authentication, and automated seat release mechanisms.
+## 🔐 Authentication & Authorization Flow
 
+### Authentication Architecture
+
+The iLibrary Backend implements a **multi-layered security architecture** with JWT-based authentication, role-based access control, and QR code verification for physical check-ins.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant PublicController
+    participant SecurityFilter
+    participant JwtUtil
+    participant Database
+    participant EmailService
+
+    Note over User,EmailService: 🔹 User Registration Flow
+    User->>Frontend: Fill signup form
+    Frontend->>PublicController: POST /public/signup
+    PublicController->>PublicController:  Validate input (@Valid)
+    PublicController->>PublicController: Add ROLE_ prefix
+    PublicController->>Database: Save user (BCrypt password)
+    Database-->>PublicController: User saved
+    PublicController->>EmailService: Send welcome email
+    EmailService-->>User: Welcome email
+    PublicController-->>Frontend: 201 Created
+    Frontend-->>User: Registration successful
+
+    Note over User,EmailService:  🔹 User Login Flow
+    User->>Frontend: Enter credentials
+    Frontend->>PublicController: POST /public/login
+    PublicController->>PublicController: AuthenticationManager.authenticate()
+    PublicController->>Database: Verify credentials (BCrypt)
+    Database-->>PublicController: User authenticated
+    PublicController->>JwtUtil: generateToken(username, roles)
+    JwtUtil->>JwtUtil: Create JWT with HS256
+    JwtUtil-->>PublicController: JWT Token (10 hours expiry)
+    PublicController-->>Frontend: {token, roles:  ["ROLE_USER"]}
+    Frontend-->>User: Login successful + Store JWT
+
+    Note over User,EmailService:  🔹 Authenticated Request Flow
+    User->>Frontend:  Book a seat
+    Frontend->>SecurityFilter: GET /booking/seat<br/>Header: Bearer <JWT>
+    SecurityFilter->>JwtUtil: extractUsername(token)
+    JwtUtil-->>SecurityFilter: username
+    SecurityFilter->>JwtUtil: isTokenValid(token)
+    JwtUtil->>JwtUtil: Check expiration & signature
+    JwtUtil-->>SecurityFilter: Valid ✓
+    SecurityFilter->>JwtUtil: extractRoles(token)
+    JwtUtil-->>SecurityFilter: ["ROLE_USER"]
+    SecurityFilter->>SecurityFilter: Create Authentication object
+    SecurityFilter->>SecurityFilter: Set SecurityContext
+    SecurityFilter->>PublicController: Forward request
+    PublicController->>Database: Book seat
+    Database-->>PublicController: Booking created
+    PublicController->>EmailService: Send QR code email
+    EmailService-->>User:  QR code with JWT token
+    PublicController-->>Frontend:  Booking successful
+    Frontend-->>User:  Confirmation displayed
+
+    Note over User,EmailService: 🔹 QR Code Verification Flow
+    User->>Frontend: Show QR at library entrance
+    Frontend->>PublicController: POST /librarian/verify-qr<br/>Body: {qrToken}
+    PublicController->>JwtUtil: Parse QR JWT token
+    JwtUtil-->>PublicController: {bookingId, seatNumber, status}
+    PublicController->>Database: Update booking to CONFIRMED
+    Database-->>PublicController: Booking confirmed
+    PublicController->>EmailService: Send confirmation email
+    EmailService-->>User: Booking confirmed email
+    PublicController-->>Frontend:  Verification successful
+    Frontend-->>User:  Entry granted ✓
+```
+
+---
+### 📊 Authentication State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Anonymous:  Application Start
+    Anonymous --> Authenticated: POST /public/login<br/>(valid credentials)
+    Anonymous --> Anonymous: POST /public/signup
+    
+    Authenticated --> BookingSeat: POST /booking/seat<br/>(with JWT)
+    BookingSeat --> AwaitingQRScan: QR code sent via email
+    
+    AwaitingQRScan --> ConfirmedBooking: POST /librarian/verify-qr<br/>(valid QR JWT)
+    AwaitingQRScan --> Cancelled: DELETE /booking/cancel
+    
+    ConfirmedBooking --> Active: User enters library
+    Active --> [*]:  Booking time expires
+    Cancelled --> Authenticated:  Seat released
+    
+    Authenticated --> [*]: Token expires (10 hours)
+    Authenticated --> [*]: User logs out
+```
+
+---
 ## ✨ Features
 
 ### 🔐 Authentication & Authorization
